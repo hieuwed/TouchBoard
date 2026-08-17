@@ -1,64 +1,45 @@
-# Kế hoạch Phát triển Mở rộng TouchBoard
+# Kế hoạch Thiết kế lại Giao diện (UI Redesign) - Phong cách Umind / Ipro
 
-Sau khi chức năng Cảm ứng cơ bản (Viết và Chọn) đã hoạt động ổn định trên màn hình tương tác, giai đoạn này sẽ tập trung vào việc bổ sung các tính năng nâng cao đã được đề xuất trước đó, giúp ứng dụng trở thành một Whiteboard hoàn chỉnh.
+Dựa trên nghiên cứu về các phần mềm bảng tương tác hiện đại như **UMind (Riotouch)** và **IPro/Prowise**, giao diện của chúng thường tập trung vào trải nghiệm "không giới hạn" (infinite canvas) với các thanh công cụ nổi (floating toolbars) tinh tế, thay vì một dải menu cố định chiếm diện tích như các ứng dụng desktop truyền thống.
 
----
+## Đề xuất Thay đổi Giao diện (UI Proposed Changes)
 
-## 1. Các Tính Năng Đề Xuất (Phases)
+### 1. Chuyển đổi Thanh công cụ (Toolbar) sang dạng Floating Dock
+- **Hiện tại:** Thanh công cụ là một `Border` cố định nằm ngang ở mép trên cùng của màn hình.
+- **Thay đổi:** 
+  - Gộp chung Toolbar và InkCanvas vào cùng một `Grid` để Toolbar **nổi (float)** đè lên trên Canvas.
+  - Vị trí: Đặt ở **chính giữa cạnh dưới** màn hình (hoặc hai bên lề), giống như dock của smartphone/tablet, giúp giáo viên dễ dàng thao tác bằng tay khi đứng trước màn hình lớn.
+  - Thiết kế: Chuyển sang dạng hình viên thuốc (pill-shape) bo góc tròn (`CornerRadius="24"`), màu nền bán trong suốt (semi-transparent) với hiệu ứng bóng đổ (DropShadow) để tạo cảm giác hiện đại (Glassmorphism).
 
-Tôi đã chia các tính năng thành từng nhóm để dễ quản lý. Bạn có thể chọn ưu tiên làm nhóm nào trước.
+### 2. Sử dụng Font Icon chuyên nghiệp
+- **Hiện tại:** Đang sử dụng các Emoji (✏️, 👆, 🧽) làm biểu tượng. Trông hơi không chuyên nghiệp.
+- **Thay đổi:** Sử dụng font chữ biểu tượng hệ thống của Windows như `Segoe Fluent Icons` (Win 11) hoặc `Segoe MDL2 Assets` (Win 10). Các biểu tượng sẽ là dạng nét thanh (outline/monoline), đồng nhất, chuyên nghiệp như các app UWP/Fluent Design.
 
-### Nhóm 1: Quản lý Lịch sử (Undo / Redo)
-Đây là tính năng cực kỳ quan trọng cho các ứng dụng vẽ.
-- Theo dõi các sự kiện: Thêm nét (`StrokesChanged`), Xóa nét, Di chuyển/Thay đổi kích thước (`SelectionMoved`, `SelectionResized`).
-- Xây dựng ngăn xếp (Stack) Undo và Redo.
-- Thêm 2 nút **Hoàn tác (Undo)** ↩️ và **Làm lại (Redo)** ↪️ lên thanh công cụ (hỗ trợ phím tắt `Ctrl+Z`, `Ctrl+Y`).
-
-### Nhóm 2: Công cụ Tẩy (Eraser) nâng cao
-Mặc dù hiện tại đã có thể "Chọn" và "Xóa" nét, nhưng người dùng thường quen với công cụ Tẩy chuyên dụng.
-- **Tẩy theo điểm (`EraseByPoint`)**: Xóa chính xác vùng chạm vào (giống cục tẩy thật). Cần có thể chọn kích thước cục tẩy.
-- **Tẩy theo nét (`EraseByStroke`)**: Chạm vào nét nào là xóa toàn bộ nét đó (nhanh hơn).
-
-### Nhóm 3: Lưu và Xuất file (Save / Export)
-Giúp người dùng lưu lại nội dung buổi họp/giảng dạy.
-- **Lưu / Mở file chuẩn (`.isf`)**: Lưu toàn bộ nét vẽ và đối tượng dưới dạng vector để lần sau mở ra chỉnh sửa tiếp.
-- **Xuất hình ảnh (`.png`, `.jpg`)**: Lưu lại trạng thái bảng hiện tại thành ảnh tĩnh để chia sẻ (kết xuất cả background).
-
-### Nhóm 4: Nền bảng đa dạng (Canvas Backgrounds)
-Cung cấp các loại giấy/nền khác nhau phục vụ nhiều mục đích.
-- Nút chuyển đổi nền: Trắng trơn (mặc định hiện tại), Đen/Xanh đậm (Blackboard), Lưới ô ly (Grid), Kẻ ngang (Ruled).
-
-### Nhóm 5: Thêm Đối tượng nâng cao (Shapes, Text, Image)
-Cho phép chèn nội dung phong phú hơn thay vì chỉ vẽ tay.
-- Vẽ hình khối cơ bản (Vuông, Tròn, Đường thẳng, Mũi tên).
-- Chèn hộp văn bản (Text Box) để gõ chữ bằng bàn phím.
-- Chèn hình ảnh (Import Image) từ máy tính vào bảng để ghi chú đè lên.
+### 3. Tối ưu hóa Nhóm Công cụ (Grouping)
+- Thiết kế lại các nhóm nút bấm để gọn gàng hơn.
+- Nhóm Bút/Tẩy, Nhóm Màu Sắc/Độ dày nét, Nhóm Hoàn tác/Thao tác bảng.
+- Căn chỉnh lại `ComboBox` chọn nền bảng cho đồng bộ với thiết kế nổi.
 
 ---
 
-## 2. Kiến trúc & Cấu trúc mã
+## Các File Bị Ảnh Hưởng (Modified Files)
 
-Do số lượng tính năng tăng lên, mã nguồn trong `MainWindow.xaml.cs` sẽ trở nên phức tạp nếu không cấu trúc lại. Kế hoạch refactor (tái cấu trúc) nhẹ:
-- Tạo lớp `HistoryManager.cs` để chuyên quản lý logic Undo/Redo.
-- Chuyển bớt các cấu hình hình ảnh (như vẽ lưới nền) sang các Resource Dictionary riêng biệt.
+### `TouchBoard/MainWindow.xaml`
+- Thay đổi cấu trúc `<Grid>` chính. Bỏ `RowDefinitions`.
+- Đưa `InkCanvas` ra làm lớp nền dưới cùng.
+- Đặt `ToolbarBorder` vào một `Border` nổi, `VerticalAlignment="Bottom"`, `HorizontalAlignment="Center"`, `Margin="0,0,0,32"`.
+- Thêm `DropShadowEffect` cho thanh công cụ.
+- Đổi các Emoji `<TextBlock>` sang các biểu tượng mã Unicode của `Segoe Fluent Icons`.
+
+### `TouchBoard/Styles/ToolbarStyles.xaml`
+- Cập nhật lại `ToolButtonStyle` và các style liên quan để loại bỏ viền vuông vức, chuyển sang thiết kế phẳng, bo góc mềm mại hơn, màu sắc hài hòa với nền bán trong suốt.
 
 ---
-
-## 3. Các câu hỏi cần xác nhận từ bạn (Open Questions)
 
 > [!IMPORTANT]
-> Để tối ưu hóa quá trình phát triển, vui lòng cho biết ý kiến của bạn về các vấn đề sau:
+> ## Cần Xác Nhận (User Review Required)
+> 
+> 1. **Vị trí thanh công cụ:** Bạn muốn thanh công cụ nổi nằm ở **dưới cùng ở giữa (Bottom Center)** (phổ biến nhất trên màn hình tương tác) hay nằm dọc ở bên trái/phải màn hình?
+> 2. **Biểu tượng (Icons):** Tôi sẽ sử dụng Font hệ thống `Segoe Fluent Icons` của Windows để thay thế Emoji. Bạn có đồng ý với thay đổi này không?
 
-1. **Thứ tự ưu tiên**: Trong 5 nhóm tính năng trên, bạn muốn làm nhóm nào trước tiên? (Tôi đề xuất làm **Nhóm 1 (Undo/Redo)** và **Nhóm 2 (Eraser)** trước vì chúng liên quan trực tiếp đến trải nghiệm vẽ cốt lõi).
-2. **Giao diện Thanh công cụ (Toolbar)**: Khi thêm nhiều nút (Tẩy, Undo, Redo, Save, Hình học, Nền), thanh công cụ hiện tại có thể bị dài. Bạn muốn thanh công cụ nằm ngang bên dưới/trên cùng (như hiện tại), hay gom thành một menu xổ xuống, hoặc thanh công cụ dọc bên mép màn hình?
-3. **Phạm vi tính năng Hình học (Nhóm 5)**: Việc hỗ trợ vẽ hình vuông/tròn bằng cách kéo thả sẽ cần viết thêm custom adorner/logic khá nhiều. Bạn có thực sự cần tính năng này ngay lập tức không, hay chỉ ưu tiên Text và Ảnh trước?
-
----
-
-## 4. Kế hoạch Triển khai (Sau khi xác nhận)
-
-1. Cập nhật `task.md` với các tính năng được bạn chọn.
-2. Tạo các lớp hỗ trợ (như `HistoryManager`).
-3. Cập nhật giao diện `MainWindow.xaml` để thêm các nút mới (kích thước lớn, thân thiện với màn hình cảm ứng).
-4. Cài đặt logic cho từng nhóm tính năng.
-5. Kiểm tra và Build lại.
+Sau khi bạn xác nhận, tôi sẽ tiến hành cập nhật lại file XAML và Styles ngay lập tức.

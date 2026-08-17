@@ -1,8 +1,9 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
+using TouchBoard.Managers;
 
 namespace TouchBoard
 {
@@ -13,39 +14,53 @@ namespace TouchBoard
     /// </summary>
     public partial class MainWindow : Window
     {
-        // ── Current state ──────────────────────────────────
-        private enum ToolMode { Pen, Select, EraserStroke, EraserPoint }
-        private ToolMode _currentMode = ToolMode.Pen;
-        private string _currentColorHex = "#CDD6F4";
-        private double _currentStrokeWidth = 6;
-        private bool _isFullscreen = false;
+        private ToolManager _toolManager = null!;
+        private ColorManager _colorManager = null!;
+        private StrokeWidthManager _strokeWidthManager = null!;
+        private SelectionManager _selectionManager = null!;
+        private CanvasManager _canvasManager = null!;
+        private ShortcutManager _shortcutManager = null!;
+        private HistoryManager _historyManager = null!;
+        private BackgroundManager _backgroundManager = null!;
+        private MultiTouchManager _multiTouchManager = null!;
+        private PageManager _pageManager = null!;
+        private NavigationManager _navigationManager = null!;
 
-        private HistoryManager _historyManager;
-
-        // ── References to buttons for active-state styling ─
-        private Button? _activeColorButton;
-        private Button? _activeStrokeWidthButton;
-
-        // ── Resource Styles ────────────────────────────────
-        private Style ToolButtonStyle => (Style)FindResource("ToolButtonStyle");
-        private Style ActiveToolButtonStyle => (Style)FindResource("ActiveToolButtonStyle");
-        private Style ColorSwatchStyle => (Style)FindResource("ColorSwatchStyle");
-        private Style ActiveColorSwatchStyle => (Style)FindResource("ActiveColorSwatchStyle");
+        public NavigationManager NavigationManager => _navigationManager;
+        public ToolManager ToolManager => _toolManager;
 
         public MainWindow()
         {
             InitializeComponent();
+            InitializeManagers();
+        }
 
-            // Set initial active states
-            _activeColorButton = BtnColorBlack;
-            _activeStrokeWidthButton = BtnStrokeMedium;
-
-            // Apply initial drawing attributes
-            ApplyDrawingAttributes();
-
-            // Initialize HistoryManager for Undo/Redo
+        private void InitializeManagers()
+        {
             _historyManager = new HistoryManager(DrawingCanvas);
             _historyManager.StateChanged += UpdateUndoRedoButtons;
+
+            _toolManager = new ToolManager(this);
+            _strokeWidthManager = new StrokeWidthManager(this, _toolManager, _historyManager);
+            _colorManager = new ColorManager(this, _toolManager, _historyManager, _strokeWidthManager);
+            _selectionManager = new SelectionManager(this, _toolManager, _historyManager, _colorManager, _strokeWidthManager);
+            _canvasManager = new CanvasManager(this, _historyManager);
+            _backgroundManager = new BackgroundManager(this, _toolManager, _colorManager);
+            _shortcutManager = new ShortcutManager(this, _toolManager, _selectionManager, _historyManager, _canvasManager);
+            
+            _multiTouchManager = new MultiTouchManager(this, _toolManager, _historyManager);
+            
+            // Khởi tạo PageManager và NavigationManager
+            _pageManager = new PageManager(this, _backgroundManager, _historyManager);
+            _pageManager.PageChanged += OnPageChanged;
+            _pageManager.PagesListChanged += OnPagesListChanged;
+            
+            _navigationManager = new NavigationManager(this);
+
+            // Cập nhật giao diện trang ban đầu
+            OnPagesListChanged();
+            OnPageChanged();
+            _colorManager.ApplyDrawingAttributes();
             UpdateUndoRedoButtons();
         }
 
@@ -59,336 +74,490 @@ namespace TouchBoard
         }
 
         // ═══════════════════════════════════════════════════
-        // MODE SWITCHING
+        // EVENT HANDLERS DELEGATED TO MANAGERS
         // ═══════════════════════════════════════════════════
 
-        private void BtnPenMode_Click(object sender, RoutedEventArgs e)
+        // Mode Switching
+        private void BtnPenMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.Pen);
+        private void BtnSelectMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.Select);
+        private void BtnEraserStrokeMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.EraserStroke);
+        private void BtnEraserPointMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.EraserPoint);
+
+        // Color & Stroke
+        private void BtnColor_Click(object sender, RoutedEventArgs e) => _colorManager.HandleColorClick(sender);
+        private void BtnStrokeWidth_Click(object sender, RoutedEventArgs e) => _strokeWidthManager.HandleStrokeWidthClick(sender, _colorManager.ApplyDrawingAttributes);
+
+        // Actions
+        private void BtnDeleteSelected_Click(object sender, RoutedEventArgs e) => _selectionManager.DeleteSelectedStrokes();
+        private void BtnClearAll_Click(object sender, RoutedEventArgs e) { _canvasManager.ClearAll(); HideSelectionContext(); }
+        private void BtnUndo_Click(object sender, RoutedEventArgs e) { _historyManager.Undo(); HideSelectionContext(); }
+        private void BtnRedo_Click(object sender, RoutedEventArgs e) { _historyManager.Redo(); HideSelectionContext(); }
+        private void BtnFullscreen_Click(object sender, RoutedEventArgs e) => _canvasManager.ToggleFullscreen();
+
+        private void HideSelectionContext()
         {
-            SwitchToMode(ToolMode.Pen);
+            SelectionMenuButton.Visibility = System.Windows.Visibility.Collapsed;
+            SelectionPopup.IsOpen = false;
         }
 
-        private void BtnSelectMode_Click(object sender, RoutedEventArgs e)
+        // Canvas Background
+        // ==========================================
+        // PAGES MANAGEMENT UI EVENT HANDLERS
+        // ==========================================
+        private void BtnPages_Click(object sender, RoutedEventArgs e)
         {
-            SwitchToMode(ToolMode.Select);
-        }
-
-        private void BtnEraserStrokeMode_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchToMode(ToolMode.EraserStroke);
-        }
-
-        private void BtnEraserPointMode_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchToMode(ToolMode.EraserPoint);
-        }
-
-        private void SwitchToMode(ToolMode mode)
-        {
-            _currentMode = mode;
-
-            // Reset all tool button styles
-            BtnPenMode.Style = ToolButtonStyle;
-            BtnSelectMode.Style = ToolButtonStyle;
-            BtnEraserStrokeMode.Style = ToolButtonStyle;
-            BtnEraserPointMode.Style = ToolButtonStyle;
-
-            switch (mode)
+            PagesPopup.IsOpen = !PagesPopup.IsOpen;
+            if (PagesPopup.IsOpen)
             {
-                case ToolMode.Pen:
-                    DrawingCanvas.EditingMode = InkCanvasEditingMode.Ink;
-                    BtnPenMode.Style = ActiveToolButtonStyle;
-                    TxtModeIndicator.Text = "✏️ CHẾ ĐỘ VIẾT";
-
-                    // Show pen options, hide delete
-                    PanelColors.Visibility = Visibility.Visible;
-                    PanelStrokeWidth.Visibility = Visibility.Visible;
-                    BtnDeleteSelected.IsEnabled = false;
-                    BtnDeleteSelected.Opacity = 0.4;
-                    break;
-
-                case ToolMode.Select:
-                    DrawingCanvas.EditingMode = InkCanvasEditingMode.Select;
-                    BtnSelectMode.Style = ActiveToolButtonStyle;
-                    TxtModeIndicator.Text = "👆 CHẾ ĐỘ CHỌN & THAO TÁC";
-
-                    // Pen options remain visible but contextually less important
-                    PanelColors.Visibility = Visibility.Visible;
-                    PanelStrokeWidth.Visibility = Visibility.Visible;
-                    break;
-
-                case ToolMode.EraserStroke:
-                    DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
-                    BtnEraserStrokeMode.Style = ActiveToolButtonStyle;
-                    TxtModeIndicator.Text = "🧽 TẨY NÉT";
-
-                    // Hide pen options, hide delete
-                    PanelColors.Visibility = Visibility.Hidden;
-                    PanelStrokeWidth.Visibility = Visibility.Hidden;
-                    BtnDeleteSelected.IsEnabled = false;
-                    BtnDeleteSelected.Opacity = 0.4;
-                    break;
-
-                case ToolMode.EraserPoint:
-                    DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByPoint;
-                    BtnEraserPointMode.Style = ActiveToolButtonStyle;
-                    TxtModeIndicator.Text = "🧼 TẨY ĐIỂM";
-
-                    // Show stroke width for eraser size, hide colors
-                    PanelColors.Visibility = Visibility.Hidden;
-                    PanelStrokeWidth.Visibility = Visibility.Visible;
-                    BtnDeleteSelected.IsEnabled = false;
-                    BtnDeleteSelected.Opacity = 0.4;
-                    break;
+                PanelAddPageTypes.Visibility = Visibility.Collapsed;
             }
         }
 
-        // ═══════════════════════════════════════════════════
-        // COLOR SELECTION
-        // ═══════════════════════════════════════════════════
-
-        private void BtnColor_Click(object sender, RoutedEventArgs e)
+        private void BtnAddPage_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button btn || btn.Tag is not string colorHex)
-                return;
-
-            _currentColorHex = colorHex;
-
-            // Update active color button visual
-            if (_activeColorButton != null)
-                _activeColorButton.Style = ColorSwatchStyle;
-
-            btn.Style = ActiveColorSwatchStyle;
-            _activeColorButton = btn;
-
-            ApplyDrawingAttributes();
-
-            // Auto-switch to Pen mode when color is selected
-            if (_currentMode != ToolMode.Pen)
-                SwitchToMode(ToolMode.Pen);
+            PanelAddPageTypes.Visibility = PanelAddPageTypes.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         }
 
-        // ═══════════════════════════════════════════════════
-        // STROKE WIDTH SELECTION
-        // ═══════════════════════════════════════════════════
+        // Track selected pattern & theme for new page creation
+        private TouchBoard.Managers.BackgroundPattern _newPagePattern = TouchBoard.Managers.BackgroundPattern.Plain;
+        private TouchBoard.Managers.BackgroundTheme _newPageTheme = TouchBoard.Managers.BackgroundTheme.Dark;
 
-        private void BtnStrokeWidth_Click(object sender, RoutedEventArgs e)
+        private void BtnNewPattern_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button btn || btn.Tag is not string widthStr)
-                return;
-
-            if (!double.TryParse(widthStr, out double width))
-                return;
-
-            _currentStrokeWidth = width;
-
-            // Update active stroke width button visual
-            if (_activeStrokeWidthButton != null)
-                _activeStrokeWidthButton.Style = ToolButtonStyle;
-
-            btn.Style = ActiveToolButtonStyle;
-            _activeStrokeWidthButton = btn;
-
-            ApplyDrawingAttributes();
-
-            // Auto-switch to Pen mode when stroke width is selected, UNLESS we are in EraserPoint mode
-            if (_currentMode != ToolMode.Pen && _currentMode != ToolMode.EraserPoint)
-                SwitchToMode(ToolMode.Pen);
-        }
-
-        // ═══════════════════════════════════════════════════
-        // APPLY DRAWING ATTRIBUTES
-        // ═══════════════════════════════════════════════════
-
-        private void ApplyDrawingAttributes()
-        {
-            var color = (Color)ColorConverter.ConvertFromString(_currentColorHex);
-
-            DrawingCanvas.DefaultDrawingAttributes = new DrawingAttributes
+            if (sender is Button btn && btn.Tag is string patStr && System.Enum.TryParse(patStr, out TouchBoard.Managers.BackgroundPattern pat))
             {
-                Color = color,
-                Width = _currentStrokeWidth,
-                Height = _currentStrokeWidth,
-                StylusTip = StylusTip.Ellipse,
-                FitToCurve = true,
-                IgnorePressure = true
-            };
-
-            // Update EraserShape for EraserPoint mode (make it a bit larger than pen stroke)
-            double eraserSize = _currentStrokeWidth * 3;
-            DrawingCanvas.EraserShape = new EllipseStylusShape(eraserSize, eraserSize);
-        }
-
-        // ═══════════════════════════════════════════════════
-        // SELECTION EVENTS & DELETE
-        // ═══════════════════════════════════════════════════
-
-        private void DrawingCanvas_SelectionChanged(object sender, EventArgs e)
-        {
-            bool hasSelection = DrawingCanvas.GetSelectedStrokes().Count > 0 ||
-                                DrawingCanvas.GetSelectedElements().Count > 0;
-
-            BtnDeleteSelected.IsEnabled = hasSelection;
-            BtnDeleteSelected.Opacity = hasSelection ? 1.0 : 0.4;
-        }
-
-        private void BtnDeleteSelected_Click(object sender, RoutedEventArgs e)
-        {
-            DeleteSelectedStrokes();
-        }
-
-        private void DeleteSelectedStrokes()
-        {
-            var selectedStrokes = DrawingCanvas.GetSelectedStrokes();
-            if (selectedStrokes.Count > 0)
-            {
-                DrawingCanvas.Strokes.Remove(selectedStrokes);
-            }
-
-            var selectedElements = DrawingCanvas.GetSelectedElements().Cast<UIElement>().ToList();
-            foreach (var element in selectedElements)
-            {
-                DrawingCanvas.Children.Remove(element);
-            }
-
-            _historyManager.SaveState();
-        }
-
-        // ═══════════════════════════════════════════════════
-        // CLEAR ALL
-        // ═══════════════════════════════════════════════════
-
-        private void BtnClearAll_Click(object sender, RoutedEventArgs e)
-        {
-            if (DrawingCanvas.Strokes.Count == 0 && DrawingCanvas.Children.Count == 0)
-                return;
-
-            var result = MessageBox.Show(
-                "Bạn có chắc muốn xóa toàn bộ bảng?",
-                "Xác nhận Xóa Sạch",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                DrawingCanvas.Strokes.Clear();
-                DrawingCanvas.Children.Clear();
-                _historyManager.SaveState();
+                _newPagePattern = pat;
+                // Update button styles
+                BtnNewPatternPlain.Style = (Style)FindResource("ToolButtonStyle");
+                BtnNewPatternGrid.Style = (Style)FindResource("ToolButtonStyle");
+                BtnNewPatternRuled.Style = (Style)FindResource("ToolButtonStyle");
+                btn.Style = (Style)FindResource("ActiveToolButtonStyle");
             }
         }
 
-        // ═══════════════════════════════════════════════════
-        // UNDO / REDO
-        // ═══════════════════════════════════════════════════
-
-        private void BtnUndo_Click(object sender, RoutedEventArgs e)
+        private void BtnNewTheme_Click(object sender, RoutedEventArgs e)
         {
-            _historyManager.Undo();
-        }
-
-        private void BtnRedo_Click(object sender, RoutedEventArgs e)
-        {
-            _historyManager.Redo();
-        }
-
-        // ═══════════════════════════════════════════════════
-        // FULLSCREEN TOGGLE
-        // ═══════════════════════════════════════════════════
-
-        private void BtnFullscreen_Click(object sender, RoutedEventArgs e)
-        {
-            ToggleFullscreen();
-        }
-
-        private void ToggleFullscreen()
-        {
-            _isFullscreen = !_isFullscreen;
-
-            if (_isFullscreen)
+            if (sender is Button btn && btn.Tag is string thStr && System.Enum.TryParse(thStr, out TouchBoard.Managers.BackgroundTheme th))
             {
-                WindowStyle = WindowStyle.None;
-                WindowState = WindowState.Maximized;
-                ResizeMode = ResizeMode.NoResize;
+                _newPageTheme = th;
+                BtnNewThemeDark.Style = (Style)FindResource("ToolButtonStyle");
+                BtnNewThemeLight.Style = (Style)FindResource("ToolButtonStyle");
+                BtnNewThemeBlackboard.Style = (Style)FindResource("ToolButtonStyle");
+                btn.Style = (Style)FindResource("ActiveToolButtonStyle");
+            }
+        }
+
+        private void BtnCreateNewPage_Click(object sender, RoutedEventArgs e)
+        {
+            _pageManager.AddPage(_newPagePattern, _newPageTheme);
+            PanelAddPageTypes.Visibility = Visibility.Collapsed;
+            PagesPopup.IsOpen = false;
+        }
+
+        private void BtnDeletePage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is System.Guid pageId)
+            {
+                for (int i = 0; i < _pageManager.Pages.Count; i++)
+                {
+                    if (_pageManager.Pages[i].Id == pageId)
+                    {
+                        _pageManager.DeletePage(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void LstPages_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LstPages.SelectedIndex >= 0 && LstPages.SelectedIndex != _pageManager.CurrentPageIndex)
+            {
+                _pageManager.SwitchToPage(LstPages.SelectedIndex);
+            }
+        }
+
+        private void OnPageChanged()
+        {
+            LstPages.SelectedIndex = _pageManager.CurrentPageIndex;
+            UpdateUndoRedoButtons();
+        }
+
+        private void OnPagesListChanged()
+        {
+            LstPages.ItemsSource = null;
+            LstPages.ItemsSource = _pageManager.Pages;
+        }
+
+        // ==========================================
+        // LstPages DRAG & DROP (Canva-style)
+        // ==========================================
+        private Point _dragStartPoint;
+        private System.Guid _changeBgTargetPageId;
+
+        private void LstPages_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStartPoint = e.GetPosition(null);
+        }
+
+        private void LstPages_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                Point position = e.GetPosition(null);
+                if (Math.Abs(position.X - _dragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(position.Y - _dragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                    if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+                    {
+                        DragDrop.DoDragDrop(listBoxItem, listBoxItem.DataContext, DragDropEffects.Move);
+                    }
+                }
+            }
+        }
+
+        private void LstPages_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+            if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+            {
+                PagesPopup.IsOpen = false;
+            }
+        }
+
+        private void LstPages_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = DragDropEffects.Move;
+            e.Handled = true;
+
+            // Ẩn tất cả indicators trước
+            ClearAllInsertIndicators();
+
+            // Tìm ListBoxItem đang hover
+            var targetItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+            if (targetItem == null) return;
+
+            // Xác định chuột ở nửa trái hay nửa phải
+            Point pos = e.GetPosition(targetItem);
+            double halfWidth = targetItem.ActualWidth / 2;
+
+            // Tìm Grid con bên trong DataTemplate
+            var contentPresenter = FindVisualChild<System.Windows.Controls.ContentPresenter>(targetItem);
+            if (contentPresenter == null) return;
+            var grid = VisualTreeHelper.GetChild(contentPresenter, 0) as Grid;
+            if (grid == null) return;
+
+            if (pos.X < halfWidth)
+            {
+                // Hiển thị vạch bên trái
+                var leftIndicator = FindChildByName<Border>(grid, "LeftInsertIndicator");
+                if (leftIndicator != null) leftIndicator.Visibility = Visibility.Visible;
             }
             else
             {
-                WindowStyle = WindowStyle.SingleBorderWindow;
-                WindowState = WindowState.Maximized;
-                ResizeMode = ResizeMode.CanResize;
+                // Hiển thị vạch bên phải
+                var rightIndicator = FindChildByName<Border>(grid, "RightInsertIndicator");
+                if (rightIndicator != null) rightIndicator.Visibility = Visibility.Visible;
             }
         }
 
-        // ═══════════════════════════════════════════════════
-        // KEYBOARD SHORTCUTS
-        // ═══════════════════════════════════════════════════
-
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void LstPages_DragLeave(object sender, DragEventArgs e)
         {
-            switch (e.Key)
+            ClearAllInsertIndicators();
+        }
+
+        private void LstPages_Drop(object sender, DragEventArgs e)
+        {
+            ClearAllInsertIndicators();
+
+            if (!e.Data.GetDataPresent(typeof(TouchBoard.Models.PageModel))) return;
+
+            var droppedData = (TouchBoard.Models.PageModel)e.Data.GetData(typeof(TouchBoard.Models.PageModel));
+            var targetItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+            if (targetItem == null || !(targetItem.DataContext is TouchBoard.Models.PageModel targetData)) return;
+
+            int oldIndex = _pageManager.Pages.IndexOf(droppedData);
+            int targetIndex = _pageManager.Pages.IndexOf(targetData);
+            if (oldIndex == -1 || targetIndex == -1 || oldIndex == targetIndex) return;
+
+            // Xác định chèn trước hay sau dựa trên vị trí chuột
+            Point pos = e.GetPosition(targetItem);
+            double halfWidth = targetItem.ActualWidth / 2;
+            int newIndex = pos.X < halfWidth ? targetIndex : targetIndex;
+
+            // Nếu kéo từ trái sang phải, chèn vào vị trí sau target
+            if (pos.X >= halfWidth && oldIndex < targetIndex)
+                newIndex = targetIndex;
+            else if (pos.X >= halfWidth && oldIndex > targetIndex)
+                newIndex = targetIndex + 1;
+            else if (pos.X < halfWidth && oldIndex > targetIndex)
+                newIndex = targetIndex;
+            else if (pos.X < halfWidth && oldIndex < targetIndex)
+                newIndex = targetIndex - 1;
+
+            if (newIndex < 0) newIndex = 0;
+            if (newIndex >= _pageManager.Pages.Count) newIndex = _pageManager.Pages.Count - 1;
+            if (oldIndex != newIndex)
             {
-                // P = Pen mode
-                case Key.P:
-                    SwitchToMode(ToolMode.Pen);
-                    e.Handled = true;
-                    break;
-
-                // S = Select mode
-                case Key.S:
-                    SwitchToMode(ToolMode.Select);
-                    e.Handled = true;
-                    break;
-
-                // E = Eraser Stroke mode
-                case Key.E:
-                    SwitchToMode(ToolMode.EraserStroke);
-                    e.Handled = true;
-                    break;
-
-                // R = Eraser Point mode
-                case Key.R:
-                    SwitchToMode(ToolMode.EraserPoint);
-                    e.Handled = true;
-                    break;
-
-                // Delete = Delete selected strokes
-                case Key.Delete:
-                    if (_currentMode == ToolMode.Select)
-                        DeleteSelectedStrokes();
-                    e.Handled = true;
-                    break;
-
-                // Undo (Ctrl+Z)
-                case Key.Z:
-                    if (Keyboard.Modifiers == ModifierKeys.Control)
-                    {
-                        _historyManager.Undo();
-                        e.Handled = true;
-                    }
-                    break;
-
-                // Redo (Ctrl+Y)
-                case Key.Y:
-                    if (Keyboard.Modifiers == ModifierKeys.Control)
-                    {
-                        _historyManager.Redo();
-                        e.Handled = true;
-                    }
-                    break;
-
-                // F11 = Toggle fullscreen
-                case Key.F11:
-                    ToggleFullscreen();
-                    e.Handled = true;
-                    break;
-
-                // Escape = Exit fullscreen or switch to Pen
-                case Key.Escape:
-                    if (_isFullscreen)
-                        ToggleFullscreen();
-                    else
-                        SwitchToMode(ToolMode.Pen);
-                    e.Handled = true;
-                    break;
+                _pageManager.MovePage(oldIndex, newIndex);
             }
+        }
+
+        private void ClearAllInsertIndicators()
+        {
+            for (int i = 0; i < LstPages.Items.Count; i++)
+            {
+                var container = LstPages.ItemContainerGenerator.ContainerFromIndex(i) as ListBoxItem;
+                if (container == null) continue;
+                var cp = FindVisualChild<System.Windows.Controls.ContentPresenter>(container);
+                if (cp == null) continue;
+                var grid = VisualTreeHelper.GetChild(cp, 0) as Grid;
+                if (grid == null) continue;
+
+                var left = FindChildByName<Border>(grid, "LeftInsertIndicator");
+                var right = FindChildByName<Border>(grid, "RightInsertIndicator");
+                if (left != null) left.Visibility = Visibility.Collapsed;
+                if (right != null) right.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // ==========================================
+        // CHANGE PAGE BACKGROUND (Panel-based)
+        // ==========================================
+        private TouchBoard.Managers.BackgroundPattern _editPattern;
+        private TouchBoard.Managers.BackgroundTheme _editTheme;
+
+        private void BtnChangePageBg_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is System.Guid pageId)
+            {
+                _changeBgTargetPageId = pageId;
+
+                // Tìm trang đang chỉnh để highlight đúng nút
+                var page = _pageManager.Pages.FirstOrDefault(p => p.Id == pageId);
+                if (page == null) return;
+
+                _editPattern = page.Pattern;
+                _editTheme = page.Theme;
+
+                // Highlight nút Pattern
+                BtnEditPatternPlain.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditPatternGrid.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditPatternRuled.Style = (Style)FindResource("ToolButtonStyle");
+                switch (_editPattern)
+                {
+                    case Managers.BackgroundPattern.Plain: BtnEditPatternPlain.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                    case Managers.BackgroundPattern.Grid: BtnEditPatternGrid.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                    case Managers.BackgroundPattern.Ruled: BtnEditPatternRuled.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                }
+
+                // Highlight nút Theme
+                BtnEditThemeDark.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditThemeLight.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditThemeBlackboard.Style = (Style)FindResource("ToolButtonStyle");
+                switch (_editTheme)
+                {
+                    case Managers.BackgroundTheme.Dark: BtnEditThemeDark.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                    case Managers.BackgroundTheme.Light: BtnEditThemeLight.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                    case Managers.BackgroundTheme.Blackboard: BtnEditThemeBlackboard.Style = (Style)FindResource("ActiveToolButtonStyle"); break;
+                }
+
+                TxtChangeBgTitle.Text = $"Đổi nền — {page.Title}";
+                
+                // Đóng popup danh sách trang để tránh xung đột focus/hit-test
+                PagesPopup.IsOpen = false;
+                
+                // Mở popup đổi nền ở giữa màn hình chính
+                ChangeBgPopup.PlacementTarget = this;
+                ChangeBgPopup.IsOpen = true;
+            }
+        }
+
+        private void BtnEditPattern_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string patStr && System.Enum.TryParse(patStr, out TouchBoard.Managers.BackgroundPattern pat))
+            {
+                _editPattern = pat;
+                BtnEditPatternPlain.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditPatternGrid.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditPatternRuled.Style = (Style)FindResource("ToolButtonStyle");
+                btn.Style = (Style)FindResource("ActiveToolButtonStyle");
+
+                // Áp dụng ngay
+                _pageManager.ChangePagePattern(_changeBgTargetPageId, pat);
+            }
+        }
+
+        private void BtnEditTheme_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string thStr && System.Enum.TryParse(thStr, out TouchBoard.Managers.BackgroundTheme th))
+            {
+                _editTheme = th;
+                BtnEditThemeDark.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditThemeLight.Style = (Style)FindResource("ToolButtonStyle");
+                BtnEditThemeBlackboard.Style = (Style)FindResource("ToolButtonStyle");
+                btn.Style = (Style)FindResource("ActiveToolButtonStyle");
+
+                // Áp dụng ngay
+                _pageManager.ChangePageTheme(_changeBgTargetPageId, th);
+            }
+        }
+
+        private void BtnApplyChangeBg_Click(object sender, RoutedEventArgs e)
+        {
+            ChangeBgPopup.IsOpen = false;
+        }
+
+        private void BtnCloseChangeBg_Click(object sender, RoutedEventArgs e)
+        {
+            ChangeBgPopup.IsOpen = false;
+        }
+
+        // ==========================================
+        // TOUCH DRAG & DROP (for touch screens)
+        // ==========================================
+        private Point _touchDragStartPoint;
+        private int _touchDragDeviceId = -1;
+        private bool _touchDragInProgress = false;
+
+        private void LstPages_PreviewTouchDown(object sender, TouchEventArgs e)
+        {
+            _touchDragStartPoint = e.GetTouchPoint(null).Position;
+            _touchDragDeviceId = e.TouchDevice.Id;
+            _touchDragInProgress = false;
+        }
+
+        private void LstPages_PreviewTouchMove(object sender, TouchEventArgs e)
+        {
+            if (e.TouchDevice.Id != _touchDragDeviceId || _touchDragInProgress) return;
+
+            var position = e.GetTouchPoint(null).Position;
+            if (Math.Abs(position.X - _touchDragStartPoint.X) > 15 ||
+                Math.Abs(position.Y - _touchDragStartPoint.Y) > 15)
+            {
+                var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+                {
+                    _touchDragInProgress = true;
+                    DragDrop.DoDragDrop(listBoxItem, listBoxItem.DataContext, DragDropEffects.Move);
+                }
+            }
+        }
+
+        private void LstPages_PreviewTouchUp(object sender, TouchEventArgs e)
+        {
+            if (e.TouchDevice.Id == _touchDragDeviceId)
+            {
+                if (!_touchDragInProgress)
+                {
+                    // Nếu không kéo, click để đóng popup
+                    var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                    if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+                    {
+                        PagesPopup.IsOpen = false;
+                    }
+                }
+                _touchDragDeviceId = -1;
+                _touchDragInProgress = false;
+            }
+        }
+
+        // ==========================================
+        // VISUAL TREE HELPERS
+        // ==========================================
+        private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            if (parentObject == null) return null;
+            if (parentObject is T parent) return parent;
+            return FindVisualParent<T>(parentObject);
+        }
+
+        private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T result) return result;
+                var found = FindVisualChild<T>(child);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private static T? FindChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T fe && fe.Name == name) return fe;
+                var found = FindChildByName<T>(child, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        // Keyboard Shortcuts
+        private void Window_KeyDown(object sender, KeyEventArgs e) => _shortcutManager.HandleKeyDown(e);
+
+        // ═══════════════════════════════════════════════════
+        // WINDOW DRAG (Click anywhere on background to move)
+        // ═══════════════════════════════════════════════════
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        // ═══════════════════════════════════════════════════
+        // SELECTION CONTEXT MENU (⋯)
+        // ═══════════════════════════════════════════════════
+
+        private void SelectionMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            _selectionManager.ToggleContextMenu();
+        }
+
+        private void PopupColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string colorHex)
+                _selectionManager.ChangeSelectionColor(colorHex);
+        }
+
+        private void PopupStrokeWidth_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string widthStr && double.TryParse(widthStr, out double width))
+                _selectionManager.ChangeSelectionStrokeWidth(width);
+        }
+
+        private void PopupCopy_Click(object sender, RoutedEventArgs e)
+        {
+            _selectionManager.CopySelection();
+            SelectionPopup.IsOpen = false;
+        }
+
+        private void PopupDelete_Click(object sender, RoutedEventArgs e)
+        {
+            _selectionManager.DeleteSelectedStrokes();
+        }
+    }
+
+    public class BackgroundTypeToBrushConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is TouchBoard.Managers.BackgroundTheme theme)
+            {
+                var color = TouchBoard.Managers.BackgroundManager.GetThemeBgColor(theme);
+                return new SolidColorBrush(color);
+            }
+            return new SolidColorBrush(Colors.White);
+        }
+
+        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
