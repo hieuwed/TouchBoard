@@ -24,8 +24,15 @@ public partial class App : Application
         // - Must be set BEFORE any WPF object is created
         AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
 
-        var app = new App();
-        app.InitializeComponent();
-        app.Run();
+        try
+        {
+            var app = new App();
+            app.InitializeComponent();
+            app.Run();
+        }
+        catch (System.Exception ex)
+        {
+            System.IO.File.WriteAllText("crash_log.txt", ex.ToString());
+        }
     }
 }
