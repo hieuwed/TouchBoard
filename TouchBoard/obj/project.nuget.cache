@@ -1,13 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "b4o+YGeMhHw=",
+  "dgSpecHash": "JfVMZLtPZFo=",
   "success": true,
-  "projectFilePath": "D:\\Download\\board\\TouchBoard\\TouchBoard.csproj",
+  "projectFilePath": "D:\\Document\\_Projects\\TouchBoard\\TouchBoard\\TouchBoard.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\SingPC\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.30\\microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
-    "C:\\Users\\SingPC\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.30\\microsoft.windowsdesktop.app.ref.8.0.30.nupkg.sha512",
-    "C:\\Users\\SingPC\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.30\\microsoft.aspnetcore.app.ref.8.0.30.nupkg.sha512",
-    "C:\\Users\\SingPC\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.30\\microsoft.netcore.app.host.win-x64.8.0.30.nupkg.sha512"
+    "C:\\Users\\tmq30\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.11\\microsoft.win32.systemevents.10.0.11.nupkg.sha512",
+    "C:\\Users\\tmq30\\.nuget\\packages\\system.drawing.common\\10.0.11\\system.drawing.common.10.0.11.nupkg.sha512"
   ],
   "logs": []
 }
