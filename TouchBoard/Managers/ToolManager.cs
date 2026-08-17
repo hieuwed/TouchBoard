@@ -36,8 +36,6 @@ namespace TouchBoard.Managers
                 case ToolMode.Pen:
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.None; // Tắt vẽ mặc định, nhường cho MultiTouchManager
                     _window.BtnPenMode.Style = activeStyle;
-                    _window.TxtModeIcon.Text = "\uE76D";
-                    _window.TxtModeIndicator.Text = "CHẾ ĐỘ VIẾT";
 
                     // Show pen options, hide delete
                     _window.PanelColors.Visibility = Visibility.Visible;
@@ -50,8 +48,6 @@ namespace TouchBoard.Managers
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.Select;
                     _window.BtnSelectMode.Style = activeStyle;
                     var selCount = _window.DrawingCanvas.GetSelectedStrokes().Count;
-                    _window.TxtModeIcon.Text = "\uE825";
-                    _window.TxtModeIndicator.Text = selCount > 0 ? $"ĐÃ CHỌN {selCount} NÉT VẼ" : "CHẾ ĐỘ CHỌN & THAO TÁC";
 
                     // Pen options remain visible for context and selected object editing
                     _window.PanelColors.Visibility = Visibility.Visible;
@@ -61,8 +57,6 @@ namespace TouchBoard.Managers
                 case ToolMode.EraserStroke:
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
                     _window.BtnEraserMode.Style = activeStyle;
-                    _window.TxtModeIcon.Text = "\uE75C";
-                    _window.TxtModeIndicator.Text = "TẨY NÉT";
 
                     // Hide pen options, hide delete
                     _window.PanelColors.Visibility = Visibility.Hidden;
@@ -74,8 +68,6 @@ namespace TouchBoard.Managers
                 case ToolMode.EraserPoint:
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByPoint;
                     _window.BtnEraserMode.Style = activeStyle;
-                    _window.TxtModeIcon.Text = "\uE89A";
-                    _window.TxtModeIndicator.Text = "TẨY ĐIỂM";
 
                     // Show stroke width for eraser size, hide colors
                     _window.PanelColors.Visibility = Visibility.Hidden;

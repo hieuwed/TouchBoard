@@ -37,13 +37,7 @@ namespace TouchBoard.Managers
             _window.BtnDeleteSelected.IsEnabled = hasSelection;
             _window.BtnDeleteSelected.Opacity = hasSelection ? 1.0 : 0.4;
 
-            if (_toolManager.CurrentMode == ToolMode.Select)
-            {
-                _window.TxtModeIcon.Text = "\uE825";
-                _window.TxtModeIndicator.Text = selectedStrokes.Count > 0
-                    ? $"ĐÃ CHỌN {selectedStrokes.Count} NÉT VẼ"
-                    : "CHẾ ĐỘ CHỌN & THAO TÁC";
-            }
+
 
             if (selectedStrokes.Count > 0)
             {

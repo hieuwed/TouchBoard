@@ -190,6 +190,44 @@ namespace TouchBoard
         private void BtnRedo_Click(object sender, RoutedEventArgs e) { _historyManager.Redo(); HideSelectionContext(); }
         private void BtnFullscreen_Click(object sender, RoutedEventArgs e) => _canvasManager.ToggleFullscreen();
 
+        // Insert Menu Actions
+        private void BtnInsertMode_Click(object sender, RoutedEventArgs e)
+        {
+            InsertPopup.IsOpen = !InsertPopup.IsOpen;
+        }
+
+        private void BtnInsertImage_Click(object sender, RoutedEventArgs e)
+        {
+            InsertPopup.IsOpen = false;
+            MessageBox.Show("Tính năng chèn ảnh đang được phát triển!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BtnInsertRuler_Click(object sender, RoutedEventArgs e)
+        {
+            BtnUnderConstruction_Click(sender, e);
+        }
+
+        private void BtnInsertSetSquare_Click(object sender, RoutedEventArgs e)
+        {
+            BtnUnderConstruction_Click(sender, e);
+        }
+
+        private void BtnInsertProtractor_Click(object sender, RoutedEventArgs e)
+        {
+            BtnUnderConstruction_Click(sender, e);
+        }
+
+        private void BtnInsertCompass_Click(object sender, RoutedEventArgs e)
+        {
+            BtnUnderConstruction_Click(sender, e);
+        }
+
+        private void BtnUnderConstruction_Click(object sender, RoutedEventArgs e)
+        {
+            InsertPopup.IsOpen = false;
+            MessageBox.Show("Tính năng này đang được phát triển!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void HideSelectionContext()
         {
             SelectionMenuButton.Visibility = System.Windows.Visibility.Collapsed;

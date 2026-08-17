@@ -557,34 +557,125 @@
         </Popup>
 
 
-        <Border VerticalAlignment="Top"
-                HorizontalAlignment="Left"
-                Margin="24,24,0,0"
-                Background="#CC2E86DE"
-                BorderBrush="#2E86DE"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="16,8"
-                Panel.ZIndex="10">
-            <Border.Effect>
-                <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.3" ShadowDepth="2"/>
-            </Border.Effect>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock x:Name="TxtModeIcon"
-                           Text="&#xE76D;"
-                           FontFamily="Segoe MDL2 Assets"
-                           Foreground="White"
-                           FontSize="16"
-                           Margin="0,0,8,0"
-                           VerticalAlignment="Center"/>
-                <TextBlock x:Name="TxtModeIndicator"
-                           Text="CHẾ ĐỘ VIẾT"
-                           Foreground="White"
-                           FontSize="14"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
+
+
+        <!-- Insert Tools Popup -->
+        <Popup x:Name="InsertPopup"
+               PlacementTarget="{Binding ElementName=BtnInsertMode}"
+               Placement="Top"
+               VerticalOffset="-15"
+               HorizontalOffset="0"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8"
+                    Margin="4">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="12" Opacity="0.3" ShadowDepth="3"/>
+                </Border.Effect>
+                <StackPanel MinWidth="250">
+                    <TextBlock Text="Chèn"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#8888A8"
+                               Margin="8,4,8,8"/>
+
+                    <!-- Tài liệu Section -->
+                    <TextBlock Text="Tài liệu" FontSize="11" Foreground="#6B7280" Margin="8,0,8,4"/>
+                    <UniformGrid Columns="4" Margin="4,0,4,4" VerticalAlignment="Top">
+                        <Button x:Name="BtnInsertImage" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertImage_Click" ToolTip="Chèn Ảnh">
+                            <StackPanel>
+                                <TextBlock Text="&#xEB9F;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Ảnh" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="4,4,4,8"/>
+
+                    <!-- Sơ đồ Section -->
+                    <TextBlock Text="Sơ đồ &amp; Biểu diễn" FontSize="11" Foreground="#6B7280" Margin="8,0,8,4"/>
+                    <UniformGrid Columns="4" Margin="4,0,4,4" VerticalAlignment="Top">
+                        <Button x:Name="BtnInsertTable" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Bảng">
+                            <StackPanel>
+                                <TextBlock Text="&#xE262;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Bảng" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertShapes" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Hình học">
+                            <StackPanel>
+                                <TextBlock Text="&#xF158;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Hình học" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertMindmap" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Sơ đồ tư duy">
+                            <StackPanel>
+                                <TextBlock Text="&#xE909;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Sơ đồ" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="4,4,4,8"/>
+
+                    <!-- Công cụ Section -->
+                    <TextBlock Text="Công cụ" FontSize="11" Foreground="#6B7280" Margin="8,0,8,4"/>
+                    <UniformGrid Columns="4" Margin="4,0,4,4" VerticalAlignment="Top">
+                        <Button x:Name="BtnInsertRuler" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertRuler_Click" ToolTip="Thước thẳng">
+                            <StackPanel>
+                                <TextBlock Text="&#xECC6;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Thước" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertSetSquare" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertSetSquare_Click" ToolTip="Eke">
+                            <StackPanel>
+                                <TextBlock Text="&#xF106;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Eke" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertProtractor" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertProtractor_Click" ToolTip="Thước đo góc">
+                            <StackPanel>
+                                <TextBlock Text="&#xE81E;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Đo góc" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertCompass" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertCompass_Click" ToolTip="Compa">
+                            <StackPanel>
+                                <TextBlock Text="&#xE909;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Compa" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertStopwatch" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Đồng hồ">
+                            <StackPanel>
+                                <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Thời gian" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertCalendar" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Lịch">
+                            <StackPanel>
+                                <TextBlock Text="&#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Lịch" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertSpotlight" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Đèn soi">
+                            <StackPanel>
+                                <TextBlock Text="&#xE734;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Đèn soi" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnInsertScreenShade" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Che màn hình">
+                            <StackPanel>
+                                <TextBlock Text="&#xE7EA;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Màn che" FontSize="10" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+        </Popup>
 
         <!-- ============================================ -->
         <!-- FLOATING TOOLBAR DOCK (Foreground Layer)     -->
@@ -688,6 +779,17 @@
                     </Button>
 
                     <Border Style="{StaticResource ToolSeparator}"/>
+
+                    <Button x:Name="BtnInsertMode"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="BtnInsertMode_Click"
+                            ToolTip="Chèn tài liệu &amp; công cụ (I)">
+                        <Viewbox Width="24" Height="24">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
 
                     <Button x:Name="BtnFullscreen"
                             Style="{StaticResource ToolButtonStyle}"
