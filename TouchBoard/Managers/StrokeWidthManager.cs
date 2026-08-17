@@ -12,33 +12,17 @@ namespace TouchBoard.Managers
         private readonly HistoryManager _historyManager;
 
         public double CurrentStrokeWidth { get; private set; } = 6;
-        public Button? ActiveStrokeWidthButton { get; private set; }
 
         public StrokeWidthManager(MainWindow window, ToolManager toolManager, HistoryManager historyManager)
         {
             _window = window;
             _toolManager = toolManager;
             _historyManager = historyManager;
-
-            ActiveStrokeWidthButton = _window.BtnStrokeMedium;
         }
 
-        public void HandleStrokeWidthClick(object sender, Action applyDrawingAttributesCallback)
+        public void HandleStrokeWidthChanged(double width, Action applyDrawingAttributesCallback)
         {
-            if (sender is not Button btn || btn.Tag is not string widthStr)
-                return;
-
-            if (!double.TryParse(widthStr, out double width))
-                return;
-
             CurrentStrokeWidth = width;
-
-            if (ActiveStrokeWidthButton != null)
-                ActiveStrokeWidthButton.Style = (Style)_window.FindResource("ToolButtonStyle");
-
-            btn.Style = (Style)_window.FindResource("ActiveToolButtonStyle");
-            ActiveStrokeWidthButton = btn;
-
             applyDrawingAttributesCallback();
 
             var selectedStrokes = _window.DrawingCanvas.GetSelectedStrokes();
@@ -62,22 +46,11 @@ namespace TouchBoard.Managers
 
         public void SyncToolbarWithSelectedStroke(double width, Action applyDrawingAttributesCallback)
         {
-            foreach (UIElement child in _window.PanelStrokeWidth.Children)
-            {
-                if (child is Button btn && btn.Tag is string widthStr && double.TryParse(widthStr, out double w))
-                {
-                    if (Math.Abs(w - width) < 0.5)
-                    {
-                        if (ActiveStrokeWidthButton != null)
-                            ActiveStrokeWidthButton.Style = (Style)_window.FindResource("ToolButtonStyle");
+            CurrentStrokeWidth = width;
+            _window.SliderStrokeWidth.Value = width;
+            if (_window.SliderSelectionStrokeWidth != null)
+                _window.SliderSelectionStrokeWidth.Value = width;
 
-                        btn.Style = (Style)_window.FindResource("ActiveToolButtonStyle");
-                        ActiveStrokeWidthButton = btn;
-                        CurrentStrokeWidth = w;
-                        break;
-                    }
-                }
-            }
             applyDrawingAttributesCallback();
         }
 

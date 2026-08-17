@@ -15,19 +15,29 @@ namespace TouchBoard.Managers
         private Stack<byte[]> _redoStack = new Stack<byte[]>();
 
         private bool _isRestoring = false;
+        private System.Windows.Threading.DispatcherTimer _debounceTimer;
 
         public event System.Action? StateChanged;
 
         public HistoryManager(InkCanvas inkCanvas)
         {
             _inkCanvas = inkCanvas;
-
             
-            // Listen to drawing events
-            _inkCanvas.StrokeCollected += (s, e) => SaveState();
-            _inkCanvas.StrokeErased += (s, e) => SaveState();
-            _inkCanvas.SelectionMoved += (s, e) => SaveState();
-            _inkCanvas.SelectionResized += (s, e) => SaveState();
+            _debounceTimer = new System.Windows.Threading.DispatcherTimer();
+            _debounceTimer.Interval = System.TimeSpan.FromMilliseconds(400);
+            _debounceTimer.Tick += (s, e) =>
+            {
+                _debounceTimer.Stop();
+                SaveState();
+            };
+
+            // Listen to drawing events with debounce
+            _inkCanvas.StrokeCollected += (s, e) => DebounceSaveState();
+            _inkCanvas.StrokeErased += (s, e) => DebounceSaveState();
+            // EraseByPoint usually triggers StrokesReplaced internally, but we can also listen to StrokesChanged just in case
+            _inkCanvas.Strokes.StrokesChanged += (s, e) => DebounceSaveState();
+            _inkCanvas.SelectionMoved += (s, e) => DebounceSaveState();
+            _inkCanvas.SelectionResized += (s, e) => DebounceSaveState();
         }
 
         public bool CanUndo => _undoStack.Count > 1; 
@@ -43,6 +53,7 @@ namespace TouchBoard.Managers
         public void SaveState()
         {
             if (_isRestoring) return;
+            _debounceTimer.Stop();
 
             using (var ms = new System.IO.MemoryStream())
             {
@@ -54,9 +65,17 @@ namespace TouchBoard.Managers
             StateChanged?.Invoke();
         }
 
+        private void DebounceSaveState()
+        {
+            if (_isRestoring) return;
+            _debounceTimer.Stop();
+            _debounceTimer.Start();
+        }
+
         public void Undo()
         {
             if (!CanUndo) return;
+            _debounceTimer.Stop(); // Cancel pending saves
 
             _isRestoring = true;
 
@@ -77,6 +96,7 @@ namespace TouchBoard.Managers
         public void Redo()
         {
             if (!CanRedo) return;
+            _debounceTimer.Stop(); // Cancel pending saves
 
             _isRestoring = true;
 

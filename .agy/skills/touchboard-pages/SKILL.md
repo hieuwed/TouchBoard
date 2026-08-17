@@ -95,10 +95,14 @@ Khi gọi `PageManager.SwitchToPage(int index)`:
 - **`PreviewMouseMove`**: So sánh khoảng cách, nếu vượt ngưỡng → `DragDrop.DoDragDrop()`. Loại trừ click vào Button.
 - **`PreviewMouseLeftButtonUp`**: Đóng popup nếu không phải kéo.
 
-### 5b. Sự kiện cảm ứng (Touch)
-- **`PreviewTouchDown`**: Ghi nhận `_touchDragStartPoint`, `_touchDragDeviceId`.
-- **`PreviewTouchMove`**: So sánh khoảng cách > 15px → `DragDrop.DoDragDrop()`. Set `_touchDragInProgress = true`.
-- **`PreviewTouchUp`**: Nếu `!_touchDragInProgress` → đóng popup (= tap nhẹ). Reset trạng thái.
+### 5b. Sự kiện cảm ứng (Touch) - Long Press to Drag
+- **Vấn đề:** Nếu chạm và kéo ngay lập tức kích hoạt Drag & Drop, người dùng sẽ không thể vuốt để cuộn (Scroll) danh sách ngang.
+- **Giải pháp:** Áp dụng cơ chế **Nhấn Giữ (Long Press)**:
+  - **`PreviewTouchDown`**: Lưu tọa độ đầu, khởi tạo `DispatcherTimer` (400ms).
+  - **Hủy Timer**: Nếu ngón tay nhấc lên (`PreviewTouchUp`) hoặc di chuyển quá 15px (`PreviewTouchMove`) trước khi đủ 400ms → Hủy Timer, cho phép `ScrollViewer` cuộn ngang.
+  - **Timer Tick**: Đủ 400ms, thu nhỏ nhẹ Thumbnail (`Scale=0.95`) để báo hiệu "đã nhấc lên", set `_touchDragInProgress = true`.
+  - **Bắt đầu Drag**: Khi đã nhấc lên, di chuyển ngón tay > 15px sẽ nhả Touch Capture và chạy `DragDrop.DoDragDrop()`.
+  - **Kết thúc (`PreviewTouchUp` / Drag End)**: Khôi phục lại Scale, reset cờ. Nút tap (không kéo, nhấc trước 400ms) sẽ đóng popup.
 
 ### 5c. Hiển thị Insert Indicator (DragOver/Drop)
 - **`DragOver`**: Xác định chuột ở nửa trái/phải của ListBoxItem đích:

@@ -39,9 +39,16 @@ Các biểu tượng này không phải là ảnh mà là mã lệnh vẽ, cho p
 - Chỉnh ComboBox về Light Theme.
 
 ## 3. Cập nhật `TouchBoard\MainWindow.xaml`
-- Thay `ToolbarBorder`:
+- **Giao diện Thanh công cụ chính (`ToolbarBorder`)**:
   - `Background="White"`
   - `BorderBrush="#E1E8ED" BorderThickness="1"`
   - `CornerRadius="15"`
   - `DropShadowEffect` sáng màu.
-- Thay toàn bộ các nút bấm bằng `Viewbox` chứa thẻ `Path` sử dụng Data lấy từ bảng trên. Nút Active sử dụng `Fill="White"`, nút thường sử dụng `Fill="{TemplateBinding Foreground}"`.
+- **Nút bấm Vector**: Thay toàn bộ các nút bấm bằng `Viewbox` chứa thẻ `Path` sử dụng Data lấy từ bảng trên. Nút Active sử dụng `Fill="White"`, nút thường sử dụng `Fill="{TemplateBinding Foreground}"`.
+- **Cấu trúc lại nút Bút (Pen)**:
+  - Nút Bút trên Toolbar chỉ dùng để bật/tắt chế độ viết. Bấm lần 1 để Viết, bấm lần 2 để mở cài đặt bút.
+  - Bảng màu (`PanelColors`) và độ dày nét (`PanelStrokeWidth`) được di chuyển khỏi thanh Toolbar và đặt vào trong **`PenSettingsPopup`**. Popup này cũng chứa thêm tùy chọn **Loại bút (Bút thường / Dạ quang)**.
+- **Điều hướng trang**:
+  - Bổ sung 2 nút **Trang trước (`<`)** và **Trang sau (`>`)** ở cạnh nút Quản lý trang.
+- **Màu nền mặc định**:
+  - Mặc định khi khởi động ứng dụng và tạo trang mới, nền bảng sẽ là **Màu Sáng (Light Theme)** để phù hợp với thanh công cụ sáng màu.

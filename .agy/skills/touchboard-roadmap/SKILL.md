@@ -54,7 +54,7 @@ Các tính năng được chia thành từng nhóm để dễ quản lý và tri
 - Chèn hộp văn bản (Text Box) để gõ chữ bằng bàn phím.
 - Chèn hình ảnh (Import Image) từ máy tính vào bảng để ghi chú đè lên.
 
-### Nhóm 9: Canvas Vô Hạn & Quản Lý Đa Trang (Infinite Canvas & Pages) [Đang chờ triển khai ⏳]
+### Nhóm 9: Canvas Vô Hạn & Quản Lý Đa Trang (Infinite Canvas & Pages) [Đã hoàn thành ✅]
 - Bảng vẽ vô hạn (Infinite Canvas): Cho phép người dùng cuộn (Pan) và thu phóng (Zoom) không giới hạn không gian vẽ.
   - **Cơ chế di chuyển (Pan/Zoom) đề xuất:**
     - *Với Chuột (Mouse):* Giữ phím `Space` + Kéo chuột trái (hoặc bấm giữ Chuột giữa / Chuột phải) để di chuyển (Pan). Lăn con trỏ chuột (kết hợp `Ctrl`) để Thu/Phóng (Zoom).

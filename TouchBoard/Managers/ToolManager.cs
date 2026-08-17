@@ -23,8 +23,7 @@ namespace TouchBoard.Managers
             // Reset all tool button styles
             _window.BtnPenMode.Style = (Style)_window.FindResource("ToolButtonStyle");
             _window.BtnSelectMode.Style = (Style)_window.FindResource("ToolButtonStyle");
-            _window.BtnEraserStrokeMode.Style = (Style)_window.FindResource("ToolButtonStyle");
-            _window.BtnEraserPointMode.Style = (Style)_window.FindResource("ToolButtonStyle");
+            _window.BtnEraserMode.Style = (Style)_window.FindResource("ToolButtonStyle");
 
             var activeStyle = (Style)_window.FindResource("ActiveToolButtonStyle");
 
@@ -61,7 +60,7 @@ namespace TouchBoard.Managers
 
                 case ToolMode.EraserStroke:
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
-                    _window.BtnEraserStrokeMode.Style = activeStyle;
+                    _window.BtnEraserMode.Style = activeStyle;
                     _window.TxtModeIcon.Text = "\uE75C";
                     _window.TxtModeIndicator.Text = "TẨY NÉT";
 
@@ -74,7 +73,7 @@ namespace TouchBoard.Managers
 
                 case ToolMode.EraserPoint:
                     _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.EraseByPoint;
-                    _window.BtnEraserPointMode.Style = activeStyle;
+                    _window.BtnEraserMode.Style = activeStyle;
                     _window.TxtModeIcon.Text = "\uE89A";
                     _window.TxtModeIndicator.Text = "TẨY ĐIỂM";
 

@@ -105,6 +105,8 @@ namespace TouchBoard.Managers
 
         private void DrawingCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (!IsHitValidForCanvas(e.GetPosition(_window))) return;
+
             if (e.RightButton == MouseButtonState.Pressed || 
                 e.MiddleButton == MouseButtonState.Pressed || 
                 (Keyboard.IsKeyDown(Key.Space) && e.LeftButton == MouseButtonState.Pressed))
@@ -144,12 +146,36 @@ namespace TouchBoard.Managers
         }
 
         // =====================================
+        // HELPER: HIT TEST VALIDATION
+        // =====================================
+        private bool IsHitValidForCanvas(Point posScreen)
+        {
+            var hit = System.Windows.Media.VisualTreeHelper.HitTest(_window, posScreen);
+            if (hit?.VisualHit == null) return false;
+
+            DependencyObject? current = hit.VisualHit;
+            while (current != null)
+            {
+                if (current == _window.InfiniteCanvasContainer)
+                    return true;
+                
+                if (current is System.Windows.Media.Visual || current is System.Windows.Media.Media3D.Visual3D)
+                    current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+                else
+                    current = LogicalTreeHelper.GetParent(current);
+            }
+            return false;
+        }
+
+        // =====================================
         // TOUCH (MANUAL 2-FINGER ZOOM/PAN)
         // =====================================
         private void DrawingCanvas_PreviewTouchDown(object? sender, TouchEventArgs e)
         {
             if (_window.ToolManager?.CurrentMode != ToolMode.Select) return;
             
+            if (!IsHitValidForCanvas(e.GetTouchPoint(_window).Position)) return;
+
             _activeTouches[e.TouchDevice.Id] = e.GetTouchPoint(_window).Position;
             if (_activeTouches.Count >= 2)
             {

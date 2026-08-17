@@ -26,7 +26,7 @@ namespace TouchBoard.Managers
             Pages = new ObservableCollection<PageModel>();
             
             // Khởi tạo trang đầu tiên
-            AddPage(BackgroundPattern.Plain, BackgroundTheme.Dark, false);
+            AddPage(BackgroundPattern.Plain, BackgroundTheme.Light, false);
             SwitchToPage(0);
         }
 

@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using TouchBoard.Managers;
 
 namespace TouchBoard
@@ -78,14 +80,108 @@ namespace TouchBoard
         // ═══════════════════════════════════════════════════
 
         // Mode Switching
-        private void BtnPenMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.Pen);
+        private void BtnPenMode_Click(object sender, RoutedEventArgs e)
+        {
+            if (_toolManager.CurrentMode == ToolMode.Pen)
+            {
+                PenSettingsPopup.IsOpen = !PenSettingsPopup.IsOpen;
+            }
+            else
+            {
+                _toolManager.SwitchToMode(ToolMode.Pen);
+                PenSettingsPopup.IsOpen = false;
+            }
+        }
         private void BtnSelectMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.Select);
-        private void BtnEraserStrokeMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.EraserStroke);
-        private void BtnEraserPointMode_Click(object sender, RoutedEventArgs e) => _toolManager.SwitchToMode(ToolMode.EraserPoint);
+        private ToolMode _lastEraserMode = ToolMode.EraserStroke;
+
+        private void BtnEraserMode_Click(object sender, RoutedEventArgs e)
+        {
+            if (_toolManager.CurrentMode == ToolMode.EraserStroke || _toolManager.CurrentMode == ToolMode.EraserPoint)
+            {
+                EraserSettingsPopup.IsOpen = !EraserSettingsPopup.IsOpen;
+            }
+            else
+            {
+                _toolManager.SwitchToMode(_lastEraserMode); // Remember last mode
+                EraserSettingsPopup.IsOpen = false;
+            }
+        }
+
+        private void BtnEraserType_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string eraserType)
+            {
+                if (eraserType == "Stroke")
+                {
+                    _lastEraserMode = ToolMode.EraserStroke;
+                    _toolManager.SwitchToMode(ToolMode.EraserStroke);
+                    BtnEraserTypeStroke.Style = (Style)FindResource("ActiveToolButtonStyle");
+                    BtnEraserTypePoint.Style = (Style)FindResource("ToolButtonStyle");
+                    PanelEraserSize.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    _lastEraserMode = ToolMode.EraserPoint;
+                    _toolManager.SwitchToMode(ToolMode.EraserPoint);
+                    BtnEraserTypeStroke.Style = (Style)FindResource("ToolButtonStyle");
+                    BtnEraserTypePoint.Style = (Style)FindResource("ActiveToolButtonStyle");
+                    PanelEraserSize.Visibility = Visibility.Visible;
+                }
+            }
+        }
+
+        private void SliderEraserSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (DrawingCanvas != null)
+            {
+                DrawingCanvas.EraserShape = new System.Windows.Ink.EllipseStylusShape(e.NewValue, e.NewValue);
+            }
+        }
 
         // Color & Stroke
-        private void BtnColor_Click(object sender, RoutedEventArgs e) => _colorManager.HandleColorClick(sender);
-        private void BtnStrokeWidth_Click(object sender, RoutedEventArgs e) => _strokeWidthManager.HandleStrokeWidthClick(sender, _colorManager.ApplyDrawingAttributes);
+        private void BtnColor_Click(object sender, RoutedEventArgs e) 
+        {
+            _colorManager.HandleColorClick(sender);
+            PenSettingsPopup.IsOpen = false;
+        }
+        private void SliderStrokeWidth_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_strokeWidthManager != null && _colorManager != null)
+            {
+                _strokeWidthManager.HandleStrokeWidthChanged(e.NewValue, _colorManager.ApplyDrawingAttributes);
+            }
+        }
+
+        private bool _isCustomColorForSelection = false;
+
+        private void BtnCustomColor_Click(object sender, RoutedEventArgs e)
+        {
+            _isCustomColorForSelection = false;
+            CustomColorPopup.PlacementTarget = BtnColorCustom;
+            CustomColorPopup.IsOpen = true;
+            UpdateCustomColorPreview();
+        }
+
+        private void BtnPenType_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string penType)
+            {
+                if (penType == "Highlighter")
+                {
+                    DrawingCanvas.DefaultDrawingAttributes.IsHighlighter = true;
+                    BtnPenNormal.Style = (Style)FindResource("ToolButtonStyle");
+                    BtnPenHighlighter.Style = (Style)FindResource("ActiveToolButtonStyle");
+                }
+                else
+                {
+                    DrawingCanvas.DefaultDrawingAttributes.IsHighlighter = false;
+                    BtnPenNormal.Style = (Style)FindResource("ActiveToolButtonStyle");
+                    BtnPenHighlighter.Style = (Style)FindResource("ToolButtonStyle");
+                }
+                PenSettingsPopup.IsOpen = false;
+            }
+        }
 
         // Actions
         private void BtnDeleteSelected_Click(object sender, RoutedEventArgs e) => _selectionManager.DeleteSelectedStrokes();
@@ -104,6 +200,18 @@ namespace TouchBoard
         // ==========================================
         // PAGES MANAGEMENT UI EVENT HANDLERS
         // ==========================================
+        private void BtnPrevPage_Click(object sender, RoutedEventArgs e)
+        {
+            if (_pageManager.CurrentPageIndex > 0)
+                _pageManager.SwitchToPage(_pageManager.CurrentPageIndex - 1);
+        }
+
+        private void BtnNextPage_Click(object sender, RoutedEventArgs e)
+        {
+            if (_pageManager.CurrentPageIndex < _pageManager.Pages.Count - 1)
+                _pageManager.SwitchToPage(_pageManager.CurrentPageIndex + 1);
+        }
+
         private void BtnPages_Click(object sender, RoutedEventArgs e)
         {
             PagesPopup.IsOpen = !PagesPopup.IsOpen;
@@ -120,7 +228,7 @@ namespace TouchBoard
 
         // Track selected pattern & theme for new page creation
         private TouchBoard.Managers.BackgroundPattern _newPagePattern = TouchBoard.Managers.BackgroundPattern.Plain;
-        private TouchBoard.Managers.BackgroundTheme _newPageTheme = TouchBoard.Managers.BackgroundTheme.Dark;
+        private TouchBoard.Managers.BackgroundTheme _newPageTheme = TouchBoard.Managers.BackgroundTheme.Light;
 
         private void BtnNewPattern_Click(object sender, RoutedEventArgs e)
         {
@@ -181,6 +289,12 @@ namespace TouchBoard
         {
             LstPages.SelectedIndex = _pageManager.CurrentPageIndex;
             UpdateUndoRedoButtons();
+            
+            // Re-apply the current tool mode because PageManager clears selection (which internally sets EditingMode to Select)
+            if (_toolManager != null)
+            {
+                _toolManager.SwitchToMode(_toolManager.CurrentMode);
+            }
         }
 
         private void OnPagesListChanged()
@@ -415,32 +529,84 @@ namespace TouchBoard
         }
 
         // ==========================================
+        // ==========================================
         // TOUCH DRAG & DROP (for touch screens)
         // ==========================================
         private Point _touchDragStartPoint;
         private int _touchDragDeviceId = -1;
         private bool _touchDragInProgress = false;
+        private DispatcherTimer? _longPressTimer;
+        private ListBoxItem? _longPressedItem;
 
         private void LstPages_PreviewTouchDown(object sender, TouchEventArgs e)
         {
             _touchDragStartPoint = e.GetTouchPoint(null).Position;
             _touchDragDeviceId = e.TouchDevice.Id;
             _touchDragInProgress = false;
+
+            var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+            if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+            {
+                _longPressedItem = listBoxItem;
+                _longPressTimer?.Stop();
+                _longPressTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMilliseconds(400) };
+                _longPressTimer.Tick += LongPressTimer_Tick;
+                _longPressTimer.Start();
+            }
+        }
+
+        private void LongPressTimer_Tick(object? sender, System.EventArgs e)
+        {
+            _longPressTimer?.Stop();
+            if (_longPressedItem != null)
+            {
+                _touchDragInProgress = true; // Sẵn sàng để drag
+                
+                // Hiệu ứng "nhấc lên"
+                var scaleTrans = new ScaleTransform(1.0, 1.0);
+                _longPressedItem.RenderTransform = scaleTrans;
+                _longPressedItem.RenderTransformOrigin = new Point(0.5, 0.5);
+
+                var anim = new DoubleAnimation(1.0, 0.95, System.TimeSpan.FromMilliseconds(150));
+                scaleTrans.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+                scaleTrans.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+            }
         }
 
         private void LstPages_PreviewTouchMove(object sender, TouchEventArgs e)
         {
-            if (e.TouchDevice.Id != _touchDragDeviceId || _touchDragInProgress) return;
+            if (e.TouchDevice.Id != _touchDragDeviceId) return;
 
             var position = e.GetTouchPoint(null).Position;
-            if (Math.Abs(position.X - _touchDragStartPoint.X) > 15 ||
-                Math.Abs(position.Y - _touchDragStartPoint.Y) > 15)
+            
+            if (!_touchDragInProgress)
             {
-                var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
-                if (listBoxItem != null && FindVisualParent<Button>((DependencyObject)e.OriginalSource) == null)
+                // Nếu chưa long press mà đã di chuyển xa -> Hủy long press (để scroll ngang)
+                if (System.Math.Abs(position.X - _touchDragStartPoint.X) > 15 ||
+                    System.Math.Abs(position.Y - _touchDragStartPoint.Y) > 15)
                 {
-                    _touchDragInProgress = true;
-                    DragDrop.DoDragDrop(listBoxItem, listBoxItem.DataContext, DragDropEffects.Move);
+                    _longPressTimer?.Stop();
+                    _longPressedItem = null;
+                }
+            }
+            else
+            {
+                // Đã long press xong, bắt đầu kéo thả
+                if (System.Math.Abs(position.X - _touchDragStartPoint.X) > 15 ||
+                    System.Math.Abs(position.Y - _touchDragStartPoint.Y) > 15)
+                {
+                    if (_longPressedItem != null)
+                    {
+                        e.TouchDevice.Capture(null);
+                        e.Handled = true;
+                        
+                        DragDrop.DoDragDrop(_longPressedItem, _longPressedItem.DataContext, DragDropEffects.Move);
+                        
+                        // Hủy hiệu ứng nhấc lên sau khi kết thúc drag
+                        _longPressedItem.RenderTransform = null;
+                        _longPressedItem = null;
+                        _touchDragInProgress = false;
+                    }
                 }
             }
         }
@@ -449,6 +615,13 @@ namespace TouchBoard
         {
             if (e.TouchDevice.Id == _touchDragDeviceId)
             {
+                _longPressTimer?.Stop();
+                
+                if (_longPressedItem != null)
+                {
+                    _longPressedItem.RenderTransform = null; // Xóa hiệu ứng nếu chưa kịp drag
+                }
+
                 if (!_touchDragInProgress)
                 {
                     // Nếu không kéo, click để đóng popup
@@ -458,8 +631,10 @@ namespace TouchBoard
                         PagesPopup.IsOpen = false;
                     }
                 }
+                
                 _touchDragDeviceId = -1;
                 _touchDragInProgress = false;
+                _longPressedItem = null;
             }
         }
 
@@ -525,10 +700,68 @@ namespace TouchBoard
                 _selectionManager.ChangeSelectionColor(colorHex);
         }
 
-        private void PopupStrokeWidth_Click(object sender, RoutedEventArgs e)
+        private void SliderSelectionStrokeWidth_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (sender is Button btn && btn.Tag is string widthStr && double.TryParse(widthStr, out double width))
-                _selectionManager.ChangeSelectionStrokeWidth(width);
+            if (_selectionManager != null)
+            {
+                _selectionManager.ChangeSelectionStrokeWidth(e.NewValue);
+            }
+        }
+
+        private void PopupCustomColor_Click(object sender, RoutedEventArgs e)
+        {
+            _isCustomColorForSelection = true;
+            CustomColorPopup.PlacementTarget = sender as UIElement;
+            CustomColorPopup.IsOpen = true;
+            UpdateCustomColorPreview();
+        }
+
+        // ==========================================
+        // CUSTOM COLOR POPUP LOGIC
+        // ==========================================
+
+        private void UpdateCustomColorPreview()
+        {
+            if (SliderR == null || SliderG == null || SliderB == null || CustomColorPreview == null) return;
+            var color = Color.FromRgb((byte)SliderR.Value, (byte)SliderG.Value, (byte)SliderB.Value);
+            CustomColorPreview.Background = new SolidColorBrush(color);
+        }
+
+        private void RgbSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UpdateCustomColorPreview();
+        }
+
+        private void CustomPaletteColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Background is SolidColorBrush brush)
+            {
+                SliderR.Value = brush.Color.R;
+                SliderG.Value = brush.Color.G;
+                SliderB.Value = brush.Color.B;
+                UpdateCustomColorPreview();
+            }
+        }
+
+        private void BtnApplyCustomColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (CustomColorPreview.Background is SolidColorBrush brush)
+            {
+                string hex = brush.Color.ToString();
+
+                if (_isCustomColorForSelection)
+                {
+                    _selectionManager.ChangeSelectionColor(hex);
+                }
+                else
+                {
+                    BtnColorCustom.Background = brush;
+                    BtnColorCustom.Tag = hex;
+                    _colorManager.HandleColorClick(BtnColorCustom);
+                    PenSettingsPopup.IsOpen = false;
+                }
+            }
+            CustomColorPopup.IsOpen = false;
         }
 
         private void PopupCopy_Click(object sender, RoutedEventArgs e)

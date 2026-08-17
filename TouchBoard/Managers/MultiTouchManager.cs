@@ -24,74 +24,54 @@ namespace TouchBoard.Managers
             _historyManager = historyManager;
 
             // 1. Touch events for Multi-touch (Fingers)
-            _window.DrawingCanvas.PreviewTouchDown += DrawingCanvas_PreviewTouchDown;
+            _window.DrawingCanvas.TouchDown += DrawingCanvas_TouchDown;
             _window.DrawingCanvas.TouchMove += DrawingCanvas_TouchMove;
             _window.DrawingCanvas.TouchUp += DrawingCanvas_TouchUp;
             _window.DrawingCanvas.TouchLeave += DrawingCanvas_TouchUp; // Fallback
 
             // 2. Stylus events for Active Pens (Pressure sensitive)
-            _window.DrawingCanvas.PreviewStylusDown += DrawingCanvas_PreviewStylusDown;
+            _window.DrawingCanvas.StylusDown += DrawingCanvas_StylusDown;
             _window.DrawingCanvas.StylusMove += DrawingCanvas_StylusMove;
             _window.DrawingCanvas.StylusUp += DrawingCanvas_StylusUp;
             _window.DrawingCanvas.StylusOutOfRange += DrawingCanvas_StylusUp;
 
             // 3. Mouse events for regular mouse fallback
-            _window.DrawingCanvas.PreviewMouseDown += DrawingCanvas_PreviewMouseDown;
+            _window.DrawingCanvas.MouseDown += DrawingCanvas_MouseDown;
             _window.DrawingCanvas.MouseMove += DrawingCanvas_MouseMove;
             _window.DrawingCanvas.MouseUp += DrawingCanvas_MouseUp;
             _window.DrawingCanvas.MouseLeave += DrawingCanvas_MouseUp; // Fallback
         }
 
         // ==========================================
-        // UI HIT TESTING
+        // HELPER: HIT TEST VALIDATION
         // ==========================================
-        private bool IsPointOverUI(Point pos)
+        private bool IsHitValidForCanvas(Point posScreen)
         {
-            bool isOverUI = false;
-            VisualTreeHelper.HitTest(_window, null, new HitTestResultCallback(result =>
+            var hit = VisualTreeHelper.HitTest(_window, posScreen);
+            if (hit?.VisualHit == null) return false;
+
+            DependencyObject? current = hit.VisualHit;
+            while (current != null)
             {
-                var visual = result.VisualHit;
-
-                if (visual == _window || (visual is Grid grid && grid.Parent == _window))
-                {
-                    return HitTestResultBehavior.Continue;
-                }
-
-                DependencyObject parent = visual;
-                string hitName = (visual as FrameworkElement)?.Name ?? visual.GetType().Name;
+                if (current == _window.InfiniteCanvasContainer)
+                    return true;
                 
-                while (parent != null)
-                {
-                    if (parent == _window.InfiniteCanvasContainer)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"HitTest on Canvas: {hitName}");
-                        isOverUI = false;
-                        return HitTestResultBehavior.Stop;
-                    }
-                    parent = VisualTreeHelper.GetParent(parent);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"HitTest on UI: {hitName}");
-                isOverUI = true;
-                return HitTestResultBehavior.Stop;
-
-            }), new PointHitTestParameters(pos));
-
-            return isOverUI;
+                if (current is Visual || current is System.Windows.Media.Media3D.Visual3D)
+                    current = VisualTreeHelper.GetParent(current);
+                else
+                    current = LogicalTreeHelper.GetParent(current);
+            }
+            return false;
         }
 
         // ==========================================
         // 1. TOUCH HANDLING (MULTI-TOUCH)
         // ==========================================
-        private void DrawingCanvas_PreviewTouchDown(object? sender, TouchEventArgs e)
+        private void DrawingCanvas_TouchDown(object? sender, TouchEventArgs e)
         {
-            if (IsPointOverUI(e.GetTouchPoint(_window).Position))
-            {
-                e.Handled = true;
-                return;
-            }
-
             if (_toolManager.CurrentMode != ToolMode.Pen) return;
+
+            if (!IsHitValidForCanvas(e.GetTouchPoint(_window).Position)) return;
 
             e.Handled = true; // Prevent promotion to mouse/stylus to avoid double drawing
 
@@ -132,15 +112,11 @@ namespace TouchBoard.Managers
         // ==========================================
         // 2. STYLUS HANDLING (ACTIVE PEN)
         // ==========================================
-        private void DrawingCanvas_PreviewStylusDown(object? sender, StylusDownEventArgs e)
+        private void DrawingCanvas_StylusDown(object? sender, StylusDownEventArgs e)
         {
-            if (IsPointOverUI(e.GetPosition(_window)))
-            {
-                e.Handled = true;
-                return;
-            }
-
             if (_toolManager.CurrentMode != ToolMode.Pen) return;
+
+            if (!IsHitValidForCanvas(e.GetPosition(_window))) return;
             if (e.Handled) return; // Ignore if Touch already handled it
             
             e.Handled = true;
@@ -184,16 +160,12 @@ namespace TouchBoard.Managers
         // ==========================================
         // 3. MOUSE HANDLING (FALLBACK)
         // ==========================================
-        private void DrawingCanvas_PreviewMouseDown(object? sender, MouseButtonEventArgs e)
+        private void DrawingCanvas_MouseDown(object? sender, MouseButtonEventArgs e)
         {
-            if (IsPointOverUI(e.GetPosition(_window)))
-            {
-                // Cho phép bubble lên UI nhưng không cho InkCanvas vẽ
-                return;
-            }
-
             if (_toolManager.CurrentMode != ToolMode.Pen) return;
-            if (e.StylusDevice != null) return; // Bỏ qua nếu là bút (đã xử lý bởi Stylus)
+            if (e.Handled || e.StylusDevice != null) return; // Ignore if handled by Touch/Stylus
+            
+            if (!IsHitValidForCanvas(e.GetPosition(_window))) return;
             
             var pos = e.GetPosition(_window.DrawingCanvas);
             _mouseStroke = new Stroke(new StylusPointCollection(new[] { new StylusPoint(pos.X, pos.Y) }))
@@ -202,7 +174,7 @@ namespace TouchBoard.Managers
             };
             
             _window.DrawingCanvas.Strokes.Add(_mouseStroke);
-            _window.DrawingCanvas.CaptureMouse();
+            Mouse.Capture(_window.DrawingCanvas);
         }
 
         private void DrawingCanvas_MouseMove(object? sender, MouseEventArgs e)

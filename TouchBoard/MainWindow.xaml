@@ -63,6 +63,120 @@
             </Button>
         </Canvas>
 
+        <!-- Pen Settings Popup -->
+        <Popup x:Name="PenSettingsPopup"
+               PlacementTarget="{Binding ElementName=BtnPenMode}"
+               Placement="Top"
+               VerticalOffset="-15"
+               HorizontalOffset="0"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8"
+                    Margin="4">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="12" Opacity="0.3" ShadowDepth="3"/>
+                </Border.Effect>
+                <StackPanel MinWidth="180">
+                    <TextBlock Text="Cài đặt Bút"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#8888A8"
+                               Margin="8,4,8,8"/>
+
+                    <!-- Pen Type Section -->
+                    <TextBlock Text="Loại bút" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
+                        <Button x:Name="BtnPenNormal" Style="{StaticResource ActiveToolButtonStyle}" Click="BtnPenType_Click" Tag="Normal" Width="70" Height="36" ToolTip="Bút thường" Content="Bút thường" FontSize="12" Margin="2,0"/>
+                        <Button x:Name="BtnPenHighlighter" Style="{StaticResource ToolButtonStyle}" Click="BtnPenType_Click" Tag="Highlighter" Width="70" Height="36" ToolTip="Dạ quang" Content="Dạ quang" FontSize="12" Margin="2,0"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="4,6"/>
+
+                    <!-- Color Section -->
+                    <TextBlock Text="Đổi màu" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
+                    <WrapPanel x:Name="PanelColors" Margin="4,0,4,4" HorizontalAlignment="Center" MaxWidth="140">
+                        <Button x:Name="BtnColorBlack" Style="{StaticResource ActiveColorSwatchStyle}" Background="#2F3542" Click="BtnColor_Click" Tag="#2F3542" ToolTip="Đen" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorRed" Style="{StaticResource ColorSwatchStyle}" Background="#F38BA8" Click="BtnColor_Click" Tag="#F38BA8" ToolTip="Đỏ hồng" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorGreen" Style="{StaticResource ColorSwatchStyle}" Background="#A6E3A1" Click="BtnColor_Click" Tag="#A6E3A1" ToolTip="Xanh lá" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorBlue" Style="{StaticResource ColorSwatchStyle}" Background="#89B4FA" Click="BtnColor_Click" Tag="#89B4FA" ToolTip="Xanh dương" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorYellow" Style="{StaticResource ColorSwatchStyle}" Background="#F9E2AF" Click="BtnColor_Click" Tag="#F9E2AF" ToolTip="Vàng" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorOrange" Style="{StaticResource ColorSwatchStyle}" Background="#FAB387" Click="BtnColor_Click" Tag="#FAB387" ToolTip="Cam" Width="30" Height="30" Margin="2"/>
+                        <Button x:Name="BtnColorCustom" Style="{StaticResource ToolButtonStyle}" Background="Transparent" BorderBrush="#E1E8ED" BorderThickness="1" Click="BtnCustomColor_Click" ToolTip="Thêm màu tuỳ chỉnh" Width="30" Height="30" Margin="2">
+                            <TextBlock Text="+" FontSize="18" Foreground="#8888A8" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-4,0,0"/>
+                        </Button>
+                    </WrapPanel>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="4,6"/>
+
+                    <!-- Stroke Width Section -->
+                    <TextBlock Text="Kích thước nét" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
+                    <StackPanel x:Name="PanelStrokeWidth" Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
+                        <Slider x:Name="SliderStrokeWidth" Width="100" Minimum="1" Maximum="50" Value="6" VerticalAlignment="Center" Margin="0,0,12,0" ValueChanged="SliderStrokeWidth_ValueChanged" IsMoveToPointEnabled="True" Cursor="Hand"/>
+                        <Border Width="36" Height="36" Background="#F1F2F6" CornerRadius="4" BorderBrush="#E1E8ED" BorderThickness="1">
+                            <Ellipse Fill="#2F3542" 
+                                     Width="{Binding Value, ElementName=SliderStrokeWidth}" 
+                                     Height="{Binding Value, ElementName=SliderStrokeWidth}" 
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Eraser Settings Popup -->
+        <Popup x:Name="EraserSettingsPopup"
+               PlacementTarget="{Binding ElementName=BtnEraserMode}"
+               Placement="Top"
+               VerticalOffset="-15"
+               HorizontalOffset="0"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8"
+                    Margin="4">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="12" Opacity="0.3" ShadowDepth="3"/>
+                </Border.Effect>
+                <StackPanel MinWidth="180">
+                    <TextBlock Text="Cài đặt Tẩy"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#8888A8"
+                               Margin="8,4,8,8"/>
+
+                    <!-- Eraser Type Section -->
+                    <TextBlock Text="Loại tẩy" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
+                        <Button x:Name="BtnEraserTypeStroke" Style="{StaticResource ActiveToolButtonStyle}" Click="BtnEraserType_Click" Tag="Stroke" Width="70" Height="36" ToolTip="Tẩy Nét (Xóa nguyên nét)" Content="Tẩy Nét" FontSize="12" Margin="2,0"/>
+                        <Button x:Name="BtnEraserTypePoint" Style="{StaticResource ToolButtonStyle}" Click="BtnEraserType_Click" Tag="Point" Width="70" Height="36" ToolTip="Tẩy Điểm (Xóa theo điểm)" Content="Tẩy Điểm" FontSize="12" Margin="2,0"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="4,6"/>
+
+                    <!-- Eraser Size Section -->
+                    <StackPanel x:Name="PanelEraserSize" Visibility="Collapsed">
+                        <TextBlock Text="Kích thước tẩy điểm" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
+                            <Slider x:Name="SliderEraserSize" Width="100" Minimum="10" Maximum="200" Value="40" VerticalAlignment="Center" Margin="0,0,12,0" ValueChanged="SliderEraserSize_ValueChanged" IsMoveToPointEnabled="True" Cursor="Hand"/>
+                            <Border Width="36" Height="36" Background="#F1F2F6" CornerRadius="4" BorderBrush="#E1E8ED" BorderThickness="1" ClipToBounds="True">
+                                <Ellipse Fill="#2F3542" 
+                                         Width="{Binding Value, ElementName=SliderEraserSize}" 
+                                         Height="{Binding Value, ElementName=SliderEraserSize}" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+
         <!-- Selection Context Popup -->
         <Popup x:Name="SelectionPopup"
                PlacementTarget="{Binding ElementName=SelectionMenuButton}"
@@ -88,38 +202,30 @@
 
                     <!-- Color Section -->
                     <TextBlock Text="Đổi màu" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
-                    <StackPanel Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#2F3542" Tag="#2F3542" Click="PopupColor_Click" ToolTip="Đen" Width="30" Height="30"/>
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F38BA8" Tag="#F38BA8" Click="PopupColor_Click" ToolTip="Đỏ hồng" Width="30" Height="30"/>
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#A6E3A1" Tag="#A6E3A1" Click="PopupColor_Click" ToolTip="Xanh lá" Width="30" Height="30"/>
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#89B4FA" Tag="#89B4FA" Click="PopupColor_Click" ToolTip="Xanh dương" Width="30" Height="30"/>
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F9E2AF" Tag="#F9E2AF" Click="PopupColor_Click" ToolTip="Vàng" Width="30" Height="30"/>
-                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#FAB387" Tag="#FAB387" Click="PopupColor_Click" ToolTip="Cam" Width="30" Height="30"/>
-                    </StackPanel>
+                    <WrapPanel Margin="4,0,4,4" HorizontalAlignment="Center" MaxWidth="140">
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#2F3542" Tag="#2F3542" Click="PopupColor_Click" ToolTip="Đen" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F38BA8" Tag="#F38BA8" Click="PopupColor_Click" ToolTip="Đỏ hồng" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#A6E3A1" Tag="#A6E3A1" Click="PopupColor_Click" ToolTip="Xanh lá" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#89B4FA" Tag="#89B4FA" Click="PopupColor_Click" ToolTip="Xanh dương" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F9E2AF" Tag="#F9E2AF" Click="PopupColor_Click" ToolTip="Vàng" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#FAB387" Tag="#FAB387" Click="PopupColor_Click" ToolTip="Cam" Width="30" Height="30" Margin="2"/>
+                        <Button Style="{StaticResource ToolButtonStyle}" Background="Transparent" BorderBrush="#E1E8ED" BorderThickness="1" Click="PopupCustomColor_Click" ToolTip="Thêm màu tuỳ chỉnh" Width="30" Height="30" Margin="2">
+                            <TextBlock Text="+" FontSize="18" Foreground="#8888A8" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-4,0,0"/>
+                        </Button>
+                    </WrapPanel>
 
                     <Border Height="1" Background="#E1E8ED" Margin="4,6"/>
 
                     <!-- Stroke Width Section -->
                     <TextBlock Text="Kích thước nét" FontSize="13" Foreground="#2F3542" Margin="8,0,8,6"/>
                     <StackPanel Orientation="Horizontal" Margin="4,0,4,4" HorizontalAlignment="Center">
-                        <Button Click="PopupStrokeWidth_Click" Tag="3" Style="{StaticResource ToolButtonStyle}" Width="44" Height="44" ToolTip="Mảnh (3px)">
-                            <StackPanel HorizontalAlignment="Center">
-                                <Ellipse Width="6" Height="6" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="S" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Click="PopupStrokeWidth_Click" Tag="6" Style="{StaticResource ToolButtonStyle}" Width="44" Height="44" ToolTip="Vừa (6px)">
-                            <StackPanel HorizontalAlignment="Center">
-                                <Ellipse Width="11" Height="11" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="M" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Click="PopupStrokeWidth_Click" Tag="12" Style="{StaticResource ToolButtonStyle}" Width="44" Height="44" ToolTip="Dày (12px)">
-                            <StackPanel HorizontalAlignment="Center">
-                                <Ellipse Width="18" Height="18" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="L" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Button>
+                        <Slider x:Name="SliderSelectionStrokeWidth" Width="100" Minimum="1" Maximum="50" Value="6" VerticalAlignment="Center" Margin="0,0,12,0" ValueChanged="SliderSelectionStrokeWidth_ValueChanged" IsMoveToPointEnabled="True" Cursor="Hand"/>
+                        <Border Width="36" Height="36" Background="#F1F2F6" CornerRadius="4" BorderBrush="#E1E8ED" BorderThickness="1">
+                            <Ellipse Fill="#2F3542" 
+                                     Width="{Binding Value, ElementName=SliderSelectionStrokeWidth}" 
+                                     Height="{Binding Value, ElementName=SliderSelectionStrokeWidth}" 
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
                     </StackPanel>
 
                     <Border Height="1" Background="#E1E8ED" Margin="4,6"/>
@@ -137,6 +243,89 @@
                             <TextBlock Text="Xóa vùng chọn" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Custom Color Picker Popup -->
+        <Popup x:Name="CustomColorPopup"
+               Placement="Right"
+               HorizontalOffset="8"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="12"
+                    Margin="4">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="12" Opacity="0.3" ShadowDepth="3"/>
+                </Border.Effect>
+                <StackPanel MinWidth="220">
+                    <TextBlock Text="Bảng màu tuỳ chỉnh"
+                               FontSize="14" FontWeight="Bold"
+                               Foreground="#2F3542"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Palette -->
+                    <WrapPanel HorizontalAlignment="Center" MaxWidth="180" Margin="0,0,0,12">
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#1E1E2E" Tag="#1E1E2E" Click="CustomPaletteColor_Click" ToolTip="Mocha Dark" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#313244" Tag="#313244" Click="CustomPaletteColor_Click" ToolTip="Mocha Surface" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#45475A" Tag="#45475A" Click="CustomPaletteColor_Click" ToolTip="Mocha Overlay" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F38BA8" Tag="#F38BA8" Click="CustomPaletteColor_Click" ToolTip="Red" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#FAB387" Tag="#FAB387" Click="CustomPaletteColor_Click" ToolTip="Peach" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F9E2AF" Tag="#F9E2AF" Click="CustomPaletteColor_Click" ToolTip="Yellow" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#A6E3A1" Tag="#A6E3A1" Click="CustomPaletteColor_Click" ToolTip="Green" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#94E2D5" Tag="#94E2D5" Click="CustomPaletteColor_Click" ToolTip="Teal" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#89DCEB" Tag="#89DCEB" Click="CustomPaletteColor_Click" ToolTip="Sky" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#89B4FA" Tag="#89B4FA" Click="CustomPaletteColor_Click" ToolTip="Blue" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#B4BEFE" Tag="#B4BEFE" Click="CustomPaletteColor_Click" ToolTip="Lavender" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#CBA6F7" Tag="#CBA6F7" Click="CustomPaletteColor_Click" ToolTip="Mauve" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F5C2E7" Tag="#F5C2E7" Click="CustomPaletteColor_Click" ToolTip="Pink" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#F2CDCD" Tag="#F2CDCD" Click="CustomPaletteColor_Click" ToolTip="Flamingo" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#EFF1F5" Tag="#EFF1F5" Click="CustomPaletteColor_Click" ToolTip="Latte Base" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#DCE0E8" Tag="#DCE0E8" Click="CustomPaletteColor_Click" ToolTip="Latte Crust" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#8C8FA1" Tag="#8C8FA1" Click="CustomPaletteColor_Click" ToolTip="Latte Overlay" Width="26" Height="26" Margin="2"/>
+                        <Button Style="{StaticResource ColorSwatchStyle}" Background="#4C4F69" Tag="#4C4F69" Click="CustomPaletteColor_Click" ToolTip="Latte Text" Width="26" Height="26" Margin="2"/>
+                    </WrapPanel>
+
+                    <Border Height="1" Background="#E1E8ED" Margin="0,0,0,12"/>
+
+                    <!-- RGB Sliders -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="R" Grid.Row="0" Grid.Column="0" Foreground="#F38BA8" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                        <Slider x:Name="SliderR" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="255" Value="200" VerticalAlignment="Center" Margin="0,0,0,4" ValueChanged="RgbSlider_ValueChanged" IsMoveToPointEnabled="True" Foreground="#F38BA8"/>
+                        
+                        <TextBlock Text="G" Grid.Row="1" Grid.Column="0" Foreground="#A6E3A1" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                        <Slider x:Name="SliderG" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="255" Value="200" VerticalAlignment="Center" Margin="0,0,0,4" ValueChanged="RgbSlider_ValueChanged" IsMoveToPointEnabled="True" Foreground="#A6E3A1"/>
+                        
+                        <TextBlock Text="B" Grid.Row="2" Grid.Column="0" Foreground="#89B4FA" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Slider x:Name="SliderB" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="255" Value="200" VerticalAlignment="Center" ValueChanged="RgbSlider_ValueChanged" IsMoveToPointEnabled="True" Foreground="#89B4FA"/>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="CustomColorPreview" Grid.Column="0" Background="#C8C8C8" CornerRadius="6" BorderBrush="#E1E8ED" BorderThickness="1" Margin="0,0,12,0"/>
+                        <Button Grid.Column="1" Content="✓ Xong" Click="BtnApplyCustomColor_Click" 
+                                Style="{StaticResource ToolButtonStyle}" 
+                                Padding="16,6" FontSize="13" FontWeight="SemiBold"
+                                Foreground="White" Background="#2E86DE" Cursor="Hand"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Popup>
@@ -269,11 +458,11 @@
                         <!-- Theme Selection -->
                         <TextBlock Text="Màu nền:" FontSize="13" Foreground="#8888A8" Margin="0,0,0,6"/>
                         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-                            <Button x:Name="BtnNewThemeDark" Style="{StaticResource ActiveToolButtonStyle}" Width="70" Height="36" Margin="4" 
+                            <Button x:Name="BtnNewThemeDark" Style="{StaticResource ToolButtonStyle}" Width="70" Height="36" Margin="4" 
                                     Tag="Dark" Click="BtnNewTheme_Click" ToolTip="Nền Tối">
                                 <TextBlock Text="🌙 Tối" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             </Button>
-                            <Button x:Name="BtnNewThemeLight" Style="{StaticResource ToolButtonStyle}" Width="70" Height="36" Margin="4" 
+                            <Button x:Name="BtnNewThemeLight" Style="{StaticResource ActiveToolButtonStyle}" Width="70" Height="36" Margin="4" 
                                     Tag="Light" Click="BtnNewTheme_Click" ToolTip="Nền Sáng">
                                 <TextBlock Text="☀ Sáng" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             </Button>
@@ -440,97 +629,18 @@
                             </Canvas>
                         </Viewbox>
                     </Button>
-                    <Button x:Name="BtnEraserStrokeMode"
+                    <Button x:Name="BtnEraserMode"
                             Style="{StaticResource ToolButtonStyle}"
-                            Click="BtnEraserStrokeMode_Click"
-                            ToolTip="Tẩy Nét (E) - Xóa toàn bộ nét chạm vào">
+                            Click="BtnEraserMode_Click"
+                            ToolTip="Tẩy (E) - Bấm 2 lần để cài đặt">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M16.24,3.56L21.19,8.5C21.97,9.29 21.97,10.55 21.19,11.34L12,20.53C10.44,22.09 7.91,22.09 6.34,20.53L2.81,17C2.03,16.21 2.03,14.95 2.81,14.16L13.41,3.56C14.2,2.78 15.46,2.78 16.24,3.56M4.22,15.58L7.76,19.11C8.54,19.9 9.8,19.9 10.59,19.11L14.12,15.58L9.17,10.63L4.22,15.58Z" />
                             </Canvas>
                         </Viewbox>
                     </Button>
-                    <Button x:Name="BtnEraserPointMode"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="BtnEraserPointMode_Click"
-                            ToolTip="Tẩy Điểm (R) - Xóa chính xác điểm chạm">
-                        <TextBlock Text="&#xE89A;" FontFamily="Segoe MDL2 Assets" FontSize="22"/>
-                    </Button>
                 </StackPanel>
 
-                <Border Style="{StaticResource ToolSeparator}"/>
-
-                <!-- === COLOR PALETTE === -->
-                <StackPanel x:Name="PanelColors" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnColorBlack"
-                            Style="{StaticResource ActiveColorSwatchStyle}"
-                            Background="#2F3542"
-                            Click="BtnColor_Click" Tag="#2F3542"
-                            ToolTip="Đen"/>
-                    <Button x:Name="BtnColorRed"
-                            Style="{StaticResource ColorSwatchStyle}"
-                            Background="#F38BA8"
-                            Click="BtnColor_Click" Tag="#F38BA8"
-                            ToolTip="Đỏ hồng"/>
-                    <Button x:Name="BtnColorGreen"
-                            Style="{StaticResource ColorSwatchStyle}"
-                            Background="#A6E3A1"
-                            Click="BtnColor_Click" Tag="#A6E3A1"
-                            ToolTip="Xanh lá"/>
-                    <Button x:Name="BtnColorBlue"
-                            Style="{StaticResource ColorSwatchStyle}"
-                            Background="#89B4FA"
-                            Click="BtnColor_Click" Tag="#89B4FA"
-                            ToolTip="Xanh dương"/>
-                    <Button x:Name="BtnColorYellow"
-                            Style="{StaticResource ColorSwatchStyle}"
-                            Background="#F9E2AF"
-                            Click="BtnColor_Click" Tag="#F9E2AF"
-                            ToolTip="Vàng"/>
-                    <Button x:Name="BtnColorOrange"
-                            Style="{StaticResource ColorSwatchStyle}"
-                            Background="#FAB387"
-                            Click="BtnColor_Click" Tag="#FAB387"
-                            ToolTip="Cam"/>
-                </StackPanel>
-
-                <Border Style="{StaticResource ToolSeparator}"/>
-
-                <!-- === STROKE WIDTH === -->
-                <StackPanel x:Name="PanelStrokeWidth" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Thin -->
-                    <Button x:Name="BtnStrokeThin"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="BtnStrokeWidth_Click" Tag="3"
-                            ToolTip="Nét Mảnh (3px)">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <Ellipse Width="7" Height="7" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="S" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </Button>
-                    <!-- Medium -->
-                    <Button x:Name="BtnStrokeMedium"
-                            Style="{StaticResource ActiveToolButtonStyle}"
-                            Click="BtnStrokeWidth_Click" Tag="6"
-                            ToolTip="Nét Vừa (6px)">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <Ellipse Width="13" Height="13" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="M" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </Button>
-                    <!-- Thick -->
-                    <Button x:Name="BtnStrokeThick"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="BtnStrokeWidth_Click" Tag="12"
-                            ToolTip="Nét Dày (12px)">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <Ellipse Width="22" Height="22" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="L" FontSize="9" HorizontalAlignment="Center" Margin="0,1,0,0"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <Border Style="{StaticResource ToolSeparator}"/>
 
                 <!-- === ACTIONS: Undo / Redo / Delete / Clear / Fullscreen === -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -593,15 +703,41 @@
 
                 <Border Style="{StaticResource ToolSeparator}"/>
 
-                <!-- === PAGES BUTTON === -->
-                <Button x:Name="BtnPages"
-                        Style="{StaticResource ToolButtonStyle}"
-                        Width="48" Height="48"
-                        Margin="4,3"
-                        Click="BtnPages_Click"
-                        ToolTip="Quản lý trang">
-                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Button>
+                <!-- === PAGES BUTTONS === -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
+                    <Button x:Name="BtnPrevPage"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Width="36" Height="36"
+                            Click="BtnPrevPage_Click"
+                            ToolTip="Trang trước (PageUp)">
+                        <Viewbox Width="20" Height="20">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                    
+                    <Button x:Name="BtnPages"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Width="44" Height="44"
+                            Margin="2,0"
+                            Click="BtnPages_Click"
+                            ToolTip="Quản lý trang">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+
+                    <Button x:Name="BtnNextPage"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Width="36" Height="36"
+                            Click="BtnNextPage_Click"
+                            ToolTip="Trang sau (PageDown)">
+                        <Viewbox Width="20" Height="20">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                </StackPanel>
             </WrapPanel>
         </Border>
     </Grid>
