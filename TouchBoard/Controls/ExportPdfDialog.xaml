@@ -1,0 +1,187 @@
+<Window x:Class="TouchBoard.Controls.ExportPdfDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Xuất PDF" Height="420" Width="460"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Border Background="White" CornerRadius="16" Margin="10">
+        <Border.Effect>
+            <DropShadowEffect Color="#333" BlurRadius="24" Opacity="0.2" ShadowDepth="4"/>
+        </Border.Effect>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Header -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Quick select row -->
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>  <!-- Label -->
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="*"/>     <!-- Page grid -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Status + Buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- ====== HEADER ====== -->
+            <Grid Grid.Row="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE8D5;" FontFamily="Segoe MDL2 Assets"
+                               FontSize="20" Foreground="#2E86DE" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="Xuất PDF" FontSize="18" FontWeight="SemiBold"
+                               Foreground="#2F3542" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button HorizontalAlignment="Right" Click="BtnCancel_Click"
+                        Width="32" Height="32" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" CornerRadius="8">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                           Foreground="#9CA3AF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#F1F2F6"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- ====== QUICK SELECT BUTTONS ====== -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <Button x:Name="BtnSelectAll" Content="Tất cả trang"
+                        Height="36" Padding="14,0" Margin="0,0,8,0"
+                        Click="BtnSelectAll_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#EBF4FF" CornerRadius="8"
+                                    BorderBrush="#2E86DE" BorderThickness="1.5" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextBlock.FontSize="13" TextBlock.Foreground="#2E86DE"
+                                                  TextBlock.FontWeight="SemiBold"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#D0E8FF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button x:Name="BtnSelectCurrent" Content="Trang hiện tại"
+                        Height="36" Padding="14,0" Margin="0,0,8,0"
+                        Click="BtnSelectCurrent_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="8"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextBlock.FontSize="13" TextBlock.Foreground="#2F3542"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E5E7EB"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Content="Bỏ chọn tất cả"
+                        Height="36" Padding="14,0"
+                        Click="BtnSelectNone_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="8"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextBlock.FontSize="13" TextBlock.Foreground="#6B7280"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E5E7EB"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+
+            <!-- Label -->
+            <TextBlock Grid.Row="4" Text="Chọn trang muốn xuất (bấm để chọn):"
+                       FontSize="13" Foreground="#6B7280"/>
+
+            <!-- ====== PAGE GRID (scroll nếu nhiều trang) ====== -->
+            <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <WrapPanel x:Name="PageCardsPanel" Orientation="Horizontal"/>
+            </ScrollViewer>
+
+            <!-- ====== STATUS + ACTION BUTTONS ====== -->
+            <Grid Grid.Row="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Đếm trang đã chọn -->
+                <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="8"
+                        BorderBrush="#E5E7EB" BorderThickness="1" Padding="10,0">
+                    <TextBlock x:Name="TxtSelectionCount" FontSize="13"
+                               Foreground="#6B7280" VerticalAlignment="Center"/>
+                </Border>
+
+                <Button Grid.Column="2" Content="Hủy bỏ" Height="48" Width="100"
+                        Click="BtnCancel_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="10"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextBlock.Foreground="#374151" TextBlock.FontSize="14"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E5E7EB"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Grid.Column="4" Height="48" Width="120"
+                        Click="BtnOk_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#2E86DE" CornerRadius="10">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE8D5;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                               Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Tiếp theo" Foreground="White" FontSize="14"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#1A70C8"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#155EA0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

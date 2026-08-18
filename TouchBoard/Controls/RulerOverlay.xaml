@@ -1,0 +1,171 @@
+<local:StemToolBase x:Class="TouchBoard.Controls.RulerOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TouchBoard.Controls"
+             Width="600" Height="102"
+             RenderTransformOrigin="0.5,0.5">
+             
+    <UserControl.Resources>
+        <Style x:Key="RulerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#667EEA"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" Padding="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#5568D3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid ClipToBounds="False">
+        <Border x:Name="RulerMainBorder"
+                Background="Transparent"
+                BorderBrush="#667EEA"
+                BorderThickness="2"
+                CornerRadius="6"
+                Padding="0">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" Opacity="0.15" ShadowDepth="3" BlurRadius="10"/>
+            </Border.Effect>
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42"/> <!-- Control Panel -->
+                    <RowDefinition Height="*"/>  <!-- Ruler Body -->
+                </Grid.RowDefinitions>
+                
+                <!-- CONTROL PANEL (Top) -->
+                <Border Grid.Row="0" 
+                        Background="#667EEA"
+                        CornerRadius="4,4,0,0"
+                        MouseDown="OnBodyMouseDown"
+                        MouseMove="OnBodyMouseMove"
+                        MouseUp="OnBodyMouseUp">
+                    <StackPanel Orientation="Horizontal" Margin="5,0">
+                        <!-- Angle Display -->
+                        <Border Background="#5568D3" 
+                                CornerRadius="4" 
+                                Padding="10,0" 
+                                Margin="0,5,8,5"
+                                MinWidth="60">
+                            <TextBlock x:Name="txtAngle" 
+                                      Text="0°" 
+                                      FontSize="14" 
+                                      FontWeight="Bold"
+                                      Foreground="White"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                        </Border>
+                        
+                        <!-- Rotation Handle -->
+                        <Button x:Name="btnRotate" 
+                                Content="↻ Xoay" 
+                                Width="55" Height="32" 
+                                Margin="2,5"
+                                Style="{StaticResource RulerButtonStyle}"
+                                PreviewMouseDown="OnRotateHandleMouseDown"
+                                PreviewMouseMove="OnRotateHandleMouseMove"
+                                PreviewMouseUp="OnRotateHandleMouseUp"
+                                ToolTip="Kéo để xoay tự do"/>
+                        
+                        <!-- Separator -->
+                        <Rectangle Width="2" Fill="#5568D3" Margin="8,8,8,8"/>
+                        
+                        <!-- Opacity Control -->
+                        <TextBlock Text="👁" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  VerticalAlignment="Center"
+                                  Margin="5,0,3,0"/>
+                        <Slider x:Name="opacitySlider"
+                                Minimum="0.3" Maximum="1.0"
+                                Value="0.8"
+                                Width="80"
+                                VerticalAlignment="Center"
+                                Margin="0,0,5,0"
+                                ValueChanged="OpacitySlider_ValueChanged"/>
+                        
+                        <!-- Separator -->
+                        <Rectangle Width="2" Fill="#5568D3" Margin="8,8,8,8"/>
+                        
+                        <Button x:Name="btnClose" 
+                                Content="✕" 
+                                Width="32" Height="32"
+                                FontSize="14"
+                                Background="#EE5A6F"
+                                Style="{StaticResource RulerButtonStyle}"
+                                ToolTip="Đóng" 
+                                Margin="2,5"
+                                Click="OnCloseClick"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- RULER BODY (Bottom) -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/> <!-- Left Handle -->
+                        <ColumnDefinition Width="*"/>    <!-- Ruler -->
+                        <ColumnDefinition Width="Auto"/> <!-- Right Handle -->
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Left Handle -->
+                    <Border x:Name="LeftHandle" Grid.Column="0" Width="16" Background="#667EEA" Cursor="SizeWE"
+                            MouseDown="LeftHandle_MouseDown" MouseMove="LeftHandle_MouseMove" MouseUp="LeftHandle_MouseUp" ToolTip="Kéo để thay đổi độ dài">
+                        <TextBlock Text="◀" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                    </Border>
+                    
+                    <Grid Grid.Column="1" ClipToBounds="False">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Ruler Body -->
+                            <RowDefinition Height="80"/>   <!-- Drawing Zone (below ruler) -->
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Nền mặt thước -->
+                        <Rectangle Grid.Row="0" x:Name="RulerBodyRect" Fill="#CCF1F2F6" Stroke="#E0E0E0" StrokeThickness="0.5" Height="60"/>
+                        
+                        <!-- Vạch chia cm/mm -->
+                        <Canvas Grid.Row="0" x:Name="RulerCanvas" Background="Transparent" MouseDown="OnBodyMouseDown" MouseMove="OnBodyMouseMove" MouseUp="OnBodyMouseUp" />
+                        
+                        <!-- ═══ VÙNG ĐẶT BÚT BÊN DƯỚI THƯỚC (Chiều cao: 80px) ═══ -->
+                        <!-- Hỗ trợ cả sự kiện Chuột (Mouse) và Cảm ứng (Touch) để đảm bảo hoạt động tốt trên màn hình tương tác -->
+                        <Border Grid.Row="1" x:Name="BottomDrawZone" Background="Transparent" Cursor="Cross"
+                                MouseDown="BottomDrawZone_MouseDown"
+                                MouseMove="BottomDrawZone_MouseMove"
+                                MouseUp="BottomDrawZone_MouseUp"
+                                MouseLeave="BottomDrawZone_MouseLeave"
+                                TouchDown="BottomDrawZone_TouchDown"
+                                TouchMove="BottomDrawZone_TouchMove"
+                                TouchUp="BottomDrawZone_TouchUp"
+                                TouchLeave="BottomDrawZone_TouchLeave"
+                                ToolTip="Kéo tại đây để kẻ đường thẳng dọc theo mép thước">
+                            <TextBlock Text="Kéo tại đây để kẻ đường thẳng" FontSize="12" Foreground="#888" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,15,0,0" IsHitTestVisible="False"/>
+                        </Border>
+                        
+                        <!-- Đường preview (được code vẽ đè lên khi đang kéo) -->
+                        <Canvas Grid.Row="0" Grid.RowSpan="2" x:Name="PreviewCanvas" IsHitTestVisible="False"/>
+                    </Grid>
+                    
+                    <!-- Right Handle -->
+                    <Border x:Name="RightHandle" Grid.Column="2" Width="16" Background="#667EEA" Cursor="SizeWE"
+                            MouseDown="RightHandle_MouseDown" MouseMove="RightHandle_MouseMove" MouseUp="RightHandle_MouseUp" ToolTip="Kéo để thay đổi độ dài">
+                        <TextBlock Text="▶" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</local:StemToolBase>

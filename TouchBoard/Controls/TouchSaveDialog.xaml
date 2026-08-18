@@ -1,0 +1,215 @@
+<Window x:Class="TouchBoard.Controls.TouchSaveDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Lưu dự án" SizeToContent="Height" Width="480" MaxHeight="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Border Background="White" CornerRadius="16" Margin="10">
+        <Border.Effect>
+            <DropShadowEffect Color="#333" BlurRadius="24" Opacity="0.2" ShadowDepth="4"/>
+        </Border.Effect>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Header -->
+                <RowDefinition Height="18"/>
+                <RowDefinition Height="Auto"/>  <!-- Label: Tên file -->
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>  <!-- TextBox + keyboard btn -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Label: Thư mục lưu -->
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>  <!-- Folder picker row -->
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>  <!-- Buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- ====== HEADER ====== -->
+            <Grid Grid.Row="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="TxtHeaderIcon" Text="&#xE74E;" FontFamily="Segoe MDL2 Assets"
+                               FontSize="20" Foreground="#2E86DE" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="TxtDialogTitle" Text="Lưu dự án" FontSize="18"
+                               FontWeight="SemiBold" Foreground="#2F3542" VerticalAlignment="Center"/>
+                </StackPanel>
+                <!-- Nút đóng -->
+                <Button HorizontalAlignment="Right" Click="BtnCancel_Click"
+                        Width="32" Height="32" Cursor="Hand" ToolTip="Đóng">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" CornerRadius="8">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                           Foreground="#9CA3AF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#F1F2F6"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- ====== TÊN FILE ====== -->
+            <TextBlock Grid.Row="2" Text="Tên file:" FontSize="13" Foreground="#6B7280"/>
+
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="50"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Input tên file -->
+                <Border Grid.Column="0" x:Name="FileNameBorder" BorderBrush="#D1D5DB"
+                        BorderThickness="1.5" CornerRadius="10" Background="#F9FAFB">
+                    <TextBox x:Name="TxtFileName" FontSize="16" Height="50"
+                             VerticalContentAlignment="Center" Padding="12,0"
+                             BorderThickness="0" Background="Transparent"
+                             GotFocus="TxtFileName_GotFocus"
+                             TextChanged="TxtFileName_TextChanged"
+                             KeyDown="TxtFileName_KeyDown"/>
+                </Border>
+
+                <!-- Nút bàn phím ảo -->
+                <Button Grid.Column="2" Height="50" Width="50"
+                        Click="BtnKeyboard_Click" Cursor="Hand"
+                        ToolTip="Bật/Tắt bàn phím ảo">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="10"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5">
+                                <TextBlock Text="&#xE765;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="20" Foreground="#6B7280"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E8F0FE"/>
+                                    <Setter TargetName="bg" Property="BorderBrush" Value="#2E86DE"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#D0E4FF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- ====== THƯ MỤC LƯU ====== -->
+            <TextBlock Grid.Row="6" Text="Lưu vào:" FontSize="13" Foreground="#6B7280"/>
+
+            <!-- Folder picker row -->
+            <Grid Grid.Row="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Đường dẫn hiện tại -->
+                <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="10"
+                        BorderBrush="#E5E7EB" BorderThickness="1.5" Padding="12,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   Foreground="#9CA3AF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="TxtFolderPath" Grid.Column="1" FontSize="12"
+                                   Foreground="#6B7280" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" Height="46"/>
+                    </Grid>
+                </Border>
+
+                <!-- Nút chọn thư mục -->
+                <Button Grid.Column="2" Height="50" Padding="14,0"
+                        Click="BtnBrowseFolder_Click" Cursor="Hand"
+                        ToolTip="Chọn thư mục lưu">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="10"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5" Padding="12,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xED43;" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="#374151" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Duyệt..." FontSize="13"
+                                               Foreground="#374151" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E8F0FE"/>
+                                    <Setter TargetName="bg" Property="BorderBrush" Value="#2E86DE"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#D0E4FF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- ====== BUTTONS ====== -->
+            <Grid Grid.Row="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="Hủy bỏ" Height="50" Cursor="Hand"
+                        Click="BtnCancel_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#F1F2F6" CornerRadius="10"
+                                    BorderBrush="#D1D5DB" BorderThickness="1.5">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextBlock.Foreground="#374151" TextBlock.FontSize="14"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E5E7EB"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Grid.Column="2" Height="50" Cursor="Hand" Click="BtnConfirm_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="#2E86DE" CornerRadius="10">
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock x:Name="IconBlock" Text="&#xE74E;"
+                                               FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                               Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LabelBlock" Text="Lưu"
+                                               Foreground="White" FontSize="14"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#1A70C8"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#155EA0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
