@@ -32,15 +32,15 @@ description: >-
 
 ### Phase 3: Hình học có sẵn (Predefined Shapes)
 > Skill con: `D:\Document\_Projects\TouchBoard\.agy\skills\touchboard-phase3-shapes\SKILL.md`
-- [ ] **Menu Hình học**: Bảng chọn hình học nổi (Popup) gồm 3 nhóm chính.
-- [ ] **Hình học phẳng (2D Shapes)**:
+- [x] **Menu Hình học**: Bảng chọn hình học nổi (Popup) gồm 3 nhóm chính.
+- [x] **Hình học phẳng (2D Shapes)**:
   - Đường thẳng, mũi tên, đứt nét.
   - Chữ nhật, tam giác, hình thoi, elip, hình tròn, lục giác, hình thang, bán nguyệt, hình bình hành.
-- [ ] **Stickers/Icons**: Các biểu tượng thường dùng (Ngôi sao, tick...).
-- [ ] **Hình học không gian (3D Shapes)**:
+- [x] **Stickers/Icons**: Các biểu tượng thường dùng (Ngôi sao, tick...).
+- [x] **Hình học không gian (3D Shapes)**:
   - Mặt cầu, bán cầu, hình trụ, nón cụt (frustum).
   - Hình nón, chóp tam giác, lăng trụ tam giác, hình lập phương.
-- [ ] **Tương tác Hình học**: Hình được chèn vào bảng là Object, hỗ trợ chọn, đổi màu nét, tô màu nền, đổi kích thước (tương tự Image/Stroke Selection).
+- [x] **Tương tác Hình học**: Hình được chèn vào bảng là Object, hỗ trợ chọn, đổi màu nét, tô màu nền, đổi kích thước (tương tự Image/Stroke Selection).
 
 ### Phase 4: Công cụ Quản lý Thời gian (Time Tools)
 > Skill con: `D:\Document\_Projects\TouchBoard\.agy\skills\touchboard-phase4-time\SKILL.md`

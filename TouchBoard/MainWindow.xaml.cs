@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +28,15 @@ namespace TouchBoard
         private MultiTouchManager _multiTouchManager = null!;
         private PageManager _pageManager = null!;
         private NavigationManager _navigationManager = null!;
+        private StemManager _stemManager = null!;
+        private SaveLoadManager _saveLoadManager = null!;
+
+        private TouchBoard.Models.ShapeType? _currentShapeType = null;
+        private bool _isDrawingShape = false;
+        private Point _shapeStartPoint;
+        private System.Windows.Ink.StrokeCollection? _currentShapeStrokes = null;
+
+        private TouchBoard.Controls.SnappingPlugIn? _snappingPlugin; // Attach 1 lần cho DrawingCanvas
 
         public NavigationManager NavigationManager => _navigationManager;
         public ToolManager ToolManager => _toolManager;
@@ -58,12 +68,18 @@ namespace TouchBoard
             _pageManager.PagesListChanged += OnPagesListChanged;
             
             _navigationManager = new NavigationManager(this);
-
+            _stemManager = new StemManager();
+            
+            _saveLoadManager = new SaveLoadManager(InfiniteCanvasContainer, DrawingCanvas, _pageManager);
+            
             // Cập nhật giao diện trang ban đầu
             OnPagesListChanged();
             OnPageChanged();
             _colorManager.ApplyDrawingAttributes();
             UpdateUndoRedoButtons();
+
+            // Kiểm tra AutoSave khi khởi động
+            Loaded += MainWindow_CheckAutoSave;
         }
 
         private void UpdateUndoRedoButtons()
@@ -80,6 +96,109 @@ namespace TouchBoard
         // ═══════════════════════════════════════════════════
 
         // Mode Switching
+        private void DrawingCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_toolManager.CurrentMode == ToolMode.Shape)
+            {
+                ShapeDraw_PreviewMouseDown(sender, e);
+                return;
+            }
+        }
+
+        private void DrawingCanvas_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isDrawingShape)
+            {
+                ShapeDraw_PreviewMouseMove(sender, e);
+                return;
+            }
+        }
+
+        private void DrawingCanvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_isDrawingShape)
+            {
+                ShapeDraw_PreviewMouseUp(sender, e);
+                return;
+            }
+            if (_toolManager.CurrentMode == ToolMode.Select)
+            {
+                // MultiTouchManager xử lý chọn, nhường quyền
+            }
+            else
+            {
+                _historyManager.SaveState();
+            }
+        }
+
+        private void ShapeDraw_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_toolManager.CurrentMode != ToolMode.Shape || _currentShapeType == null) return;
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+
+            _shapeStartPoint = e.GetPosition(DrawingCanvas);
+            _isDrawingShape = true;
+
+            var da = DrawingCanvas.DefaultDrawingAttributes.Clone();
+            da.Color = (Color)ColorConverter.ConvertFromString(_colorManager.CurrentColorHex);
+            da.Width = _strokeWidthManager.CurrentStrokeWidth;
+            da.Height = _strokeWidthManager.CurrentStrokeWidth;
+
+            _currentShapeStrokes = ShapeManager.GenerateStrokes(_currentShapeType.Value, new Rect(_shapeStartPoint.X, _shapeStartPoint.Y, 0, 0), da);
+            DrawingCanvas.Strokes.Add(_currentShapeStrokes);
+
+            DrawingCanvas.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void ShapeDraw_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_isDrawingShape || _currentShapeStrokes == null) return;
+
+            Point currentPos = e.GetPosition(DrawingCanvas);
+            double x = Math.Min(_shapeStartPoint.X, currentPos.X);
+            double y = Math.Min(_shapeStartPoint.Y, currentPos.Y);
+            double w = Math.Abs(currentPos.X - _shapeStartPoint.X);
+            double h = Math.Abs(currentPos.Y - _shapeStartPoint.Y);
+
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                double side = Math.Max(w, h);
+                w = side;
+                h = side;
+            }
+
+            var da = _currentShapeStrokes[0].DrawingAttributes.Clone();
+            DrawingCanvas.Strokes.Remove(_currentShapeStrokes);
+            
+            _currentShapeStrokes = ShapeManager.GenerateStrokes(_currentShapeType.Value, new Rect(x, y, w, h), da);
+            DrawingCanvas.Strokes.Add(_currentShapeStrokes);
+        }
+
+        private void ShapeDraw_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isDrawingShape || _currentShapeStrokes == null) return;
+
+            _isDrawingShape = false;
+            DrawingCanvas.ReleaseMouseCapture();
+
+            var bounds = _currentShapeStrokes.GetBounds();
+            if (bounds.Width < 20 || bounds.Height < 20)
+            {
+                var da = _currentShapeStrokes[0].DrawingAttributes.Clone();
+                DrawingCanvas.Strokes.Remove(_currentShapeStrokes);
+                _currentShapeStrokes = ShapeManager.GenerateStrokes(_currentShapeType.Value, new Rect(_shapeStartPoint.X - 75, _shapeStartPoint.Y - 75, 150, 150), da);
+                DrawingCanvas.Strokes.Add(_currentShapeStrokes);
+            }
+
+            _historyManager.SaveState();
+            _toolManager.SwitchToMode(ToolMode.Select);
+            this.Cursor = Cursors.Arrow;
+            
+            DrawingCanvas.Select(_currentShapeStrokes);
+            _currentShapeStrokes = null;
+        }
+
         private void BtnPenMode_Click(object sender, RoutedEventArgs e)
         {
             if (_toolManager.CurrentMode == ToolMode.Pen)
@@ -196,6 +315,26 @@ namespace TouchBoard
             InsertPopup.IsOpen = !InsertPopup.IsOpen;
         }
 
+        private void BtnInsertShapes_Click(object sender, RoutedEventArgs e)
+        {
+            InsertPopup.IsOpen = false;
+            ShapeMenuPopup.IsOpen = true;
+        }
+
+        private void InsertShape_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string shapeName)
+            {
+                if (Enum.TryParse(shapeName, out TouchBoard.Models.ShapeType shapeType))
+                {
+                    _currentShapeType = shapeType;
+                    _toolManager.SwitchToMode(ToolMode.Shape);
+                    ShapeMenuPopup.IsOpen = false;
+                    this.Cursor = Cursors.Cross;
+                }
+            }
+        }
+
         private void BtnInsertImage_Click(object sender, RoutedEventArgs e)
         {
             InsertPopup.IsOpen = false;
@@ -204,7 +343,32 @@ namespace TouchBoard
 
         private void BtnInsertRuler_Click(object sender, RoutedEventArgs e)
         {
-            BtnUnderConstruction_Click(sender, e);
+            InsertPopup.IsOpen = false;
+            var ruler = new TouchBoard.Controls.RulerOverlay();
+            ruler.Initialize(InfiniteCanvasContainer, new Point(300, 300));
+
+            // Đăng ký với StemManager — cho phép SnappingPlugIn biết vị trí mép thước
+            _stemManager.RegisterTool(ruler);
+            EnsureSnappingPlugIn();
+
+            ruler.ToolClosed += (s, ev) =>
+            {
+                ruler.CancelDraw();                      // đảm bảo EditingMode được restore
+                _stemManager.UnregisterTool(ruler);      // gỡ khỏi snap system
+                InfiniteCanvasContainer.Children.Remove(ruler);
+            };
+
+            InfiniteCanvasContainer.Children.Add(ruler);
+        }
+
+        /// <summary>
+        /// Gắn SnappingPlugIn vào DrawingCanvas — chỉ thực hiện 1 lần dùng chung cho mọi công cụ STEM.
+        /// </summary>
+        private void EnsureSnappingPlugIn()
+        {
+            if (_snappingPlugin != null) return; // đã attach rồi
+            _snappingPlugin = new TouchBoard.Controls.SnappingPlugIn(_stemManager);
+            DrawingCanvas.AddStylusPlugin(_snappingPlugin); // SnappableInkCanvas expose method này
         }
 
         private void BtnInsertSetSquare_Click(object sender, RoutedEventArgs e)
@@ -811,6 +975,178 @@ namespace TouchBoard
         private void PopupDelete_Click(object sender, RoutedEventArgs e)
         {
             _selectionManager.DeleteSelectedStrokes();
+        }
+
+        private void DeleteItem_Click(object sender, RoutedEventArgs e)
+        {
+            _selectionManager.DeleteSelectedStrokes();
+        }
+
+        // =======================================================
+        // AUTO SAVE RECOVERY
+        // =======================================================
+        private void MainWindow_CheckAutoSave(object sender, RoutedEventArgs e)
+        {
+            if (_saveLoadManager.HasPendingAutoSave())
+            {
+                var result = MessageBox.Show(
+                    "Có bản vẽ chưa được lưu từ phiên làm việc trước.\nBạn có muốn khôi phục không?",
+                    "Khôi phục bản vẽ",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                    _saveLoadManager.LoadProject(
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                            "TouchBoard", "AutoSave", "current_session.tbproj"));
+                else
+                    _saveLoadManager.DeleteAutoSave();
+            }
+        }
+
+        // =======================================================
+        // SAVE, LOAD, EXPORT PDF
+        // =======================================================
+        private void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPopup.IsOpen = !SettingsPopup.IsOpen;
+        }
+
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPopup.IsOpen = false;
+
+            // Nếu đã có file → lưu thẳng vào file hiện tại (không cần dialog)
+            if (!_saveLoadManager.IsNewProject)
+            {
+                try
+                {
+                    _saveLoadManager.QuickSave();
+                    // Toast nhỏ thay vì MessageBox cho trường hợp "Lưu nhanh"
+                    ShowSaveToast(_saveLoadManager.CurrentFilePath!);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi lưu: {ex.Message}", "Lỗi",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                return;
+            }
+
+            // Dự án mới chưa lưu → hiện dialog chọn tên và vị trí
+            ShowSaveAsDialog();
+        }
+
+        private void ShowSaveAsDialog()
+        {
+            var dialog = new TouchBoard.Controls.TouchSaveDialog(
+                TouchBoard.Controls.TouchSaveDialogMode.Save) { Owner = this };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    _saveLoadManager.SaveProject(dialog.ResultFilePath);
+                    ShowSaveToast(dialog.ResultFilePath);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi lưu dự án: {ex.Message}", "Lỗi",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        /// <summary>Hiển thị thông báo lưu thành công nhỏ gọn (không block UI)</summary>
+        private void ShowSaveToast(string filePath)
+        {
+            string fileName = Path.GetFileName(filePath);
+            MessageBox.Show($"✓ Đã lưu: {fileName}", "Lưu thành công",
+                MessageBoxButton.OK, MessageBoxImage.None);
+        }
+
+        /// <summary>Luôn hiện dialog — cho phép lưu thành tên/vị trí khác</summary>
+        private void BtnSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPopup.IsOpen = false;
+            ShowSaveAsDialog();
+        }
+
+        private void BtnLoad_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPopup.IsOpen = false;
+            // Mở dialog duyệt file — vẫn dùng OpenFileDialog vì cần chọn file có sẵn
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "TouchBoard Project (*.tbproj)|*.tbproj",
+                DefaultExt = ".tbproj",
+                Title = "Mở dự án",
+                InitialDirectory = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "TouchBoard", "Projects")
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    _saveLoadManager.LoadProject(openFileDialog.FileName);
+                    MessageBox.Show("Đã tải dự án thành công!", "Thông báo",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi mở dự án: {ex.Message}", "Lỗi",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void BtnExportPdf_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPopup.IsOpen = false;
+            if (_pageManager.Pages.Count == 0)
+            {
+                MessageBox.Show("Không có trang nào để xuất!", "Thông báo",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Bước 1: Chọn trang cần xuất
+            var pageDialog = new TouchBoard.Controls.ExportPdfDialog(
+                _pageManager.Pages.Count, _pageManager.CurrentPageIndex) { Owner = this };
+
+            if (pageDialog.ShowDialog() != true) return;
+
+            // Bước 2: Đặt tên file — dùng dialog cảm ứng
+            // Mặc định lấy tên từ file dự án đang mở (bỏ đuôi .tbproj)
+            string defaultPdfName = _saveLoadManager.CurrentFilePath != null
+                ? Path.GetFileNameWithoutExtension(_saveLoadManager.CurrentFilePath)
+                : $"BaiGiang_{DateTime.Now:yyyyMMdd_HHmm}";
+
+            var saveDialog = new TouchBoard.Controls.TouchSaveDialog(
+                TouchBoard.Controls.TouchSaveDialogMode.ExportPdf, defaultPdfName) { Owner = this };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+                    _saveLoadManager.ExportToPdf(saveDialog.ResultFilePath, pageDialog.SelectedPageIndices);
+                    MessageBox.Show("Đã xuất PDF thành công!", "Thông báo",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi xuất PDF: {ex.Message}", "Lỗi",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    System.Windows.Input.Mouse.OverrideCursor = null;
+                }
+            }
         }
     }
 

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TouchBoard"
+        xmlns:controls="clr-namespace:TouchBoard.Controls"
         Title="Touch Board - Bảng Viết Tương Tác"
         WindowState="Maximized"
         WindowStyle="SingleBorderWindow"
@@ -17,21 +18,24 @@
         <!-- INK CANVAS (Full Area, Background Layer)     -->
         <!-- ============================================ -->
         <Canvas x:Name="InfiniteCanvasContainer" ClipToBounds="True">
-            <InkCanvas x:Name="DrawingCanvas"
+            <controls:SnappableInkCanvas x:Name="DrawingCanvas"
                        Width="100000" Height="100000"
                        Margin="-50000,-50000,0,0"
                        Background="#1E1E2E"
                        EditingMode="Ink"
                        ClipToBounds="False"
-                       Focusable="True">
-                <InkCanvas.DefaultDrawingAttributes>
+                       Focusable="True"
+                       PreviewMouseDown="DrawingCanvas_PreviewMouseDown"
+                       PreviewMouseMove="DrawingCanvas_PreviewMouseMove"
+                       PreviewMouseUp="DrawingCanvas_PreviewMouseUp">
+                <controls:SnappableInkCanvas.DefaultDrawingAttributes>
                     <DrawingAttributes Color="#CDD6F4"
                                        Width="6" Height="6"
                                        StylusTip="Ellipse"
                                        FitToCurve="True"
                                        IgnorePressure="True"/>
-                </InkCanvas.DefaultDrawingAttributes>
-            </InkCanvas>
+                </controls:SnappableInkCanvas.DefaultDrawingAttributes>
+            </controls:SnappableInkCanvas>
         </Canvas>
 
         <!-- ============================================ -->
@@ -605,7 +609,7 @@
                                 <TextBlock Text="Bảng" FontSize="10" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="BtnInsertShapes" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnUnderConstruction_Click" ToolTip="Hình học">
+                        <Button x:Name="BtnInsertShapes" Style="{StaticResource ToolButtonStyle}" Width="56" Height="56" Margin="2" Click="BtnInsertShapes_Click" ToolTip="Hình học">
                             <StackPanel>
                                 <TextBlock Text="&#xF158;" FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,2"/>
                                 <TextBlock Text="Hình học" FontSize="10" HorizontalAlignment="Center"/>
@@ -674,6 +678,90 @@
                         </Button>
                     </UniformGrid>
                 </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Shape Menu Popup -->
+        <Popup x:Name="ShapeMenuPopup"
+               PlacementTarget="{Binding ElementName=BtnInsertShapes}"
+               Placement="Right"
+               HorizontalOffset="5"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8"
+                    Margin="4">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="12" Opacity="0.3" ShadowDepth="3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="2D Shapes" FontSize="12" FontWeight="SemiBold" Foreground="#8888A8" Margin="4,0,0,8"/>
+                    <WrapPanel Grid.Row="1" MaxWidth="220" Margin="0,0,0,10">
+                        <!-- 2D Shapes -->
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Rectangle" ToolTip="Hình chữ nhật">
+                            <TextBlock Text="▭" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Ellipse" ToolTip="Hình Elip">
+                            <TextBlock Text="⬭" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Triangle" ToolTip="Hình tam giác">
+                            <TextBlock Text="△" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="RightTriangle" ToolTip="Tam giác vuông">
+                            <TextBlock Text="⊿" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Parallelogram" ToolTip="Hình bình hành">
+                            <TextBlock Text="▱" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Rhombus" ToolTip="Hình thoi">
+                            <TextBlock Text="◇" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Trapezoid" ToolTip="Hình thang">
+                            <TextBlock Text="⏢" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Pentagon" ToolTip="Ngũ giác">
+                            <TextBlock Text="⬠" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Hexagon" ToolTip="Lục giác">
+                            <TextBlock Text="⬡" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Star" ToolTip="Ngôi sao">
+                            <TextBlock Text="★" FontSize="20"/>
+                        </Button>
+                        <!-- 3D Shapes -->
+                        <TextBlock Text="3D Shapes" Width="200" FontSize="12" FontWeight="SemiBold" Foreground="#8888A8" Margin="4,8,0,8"/>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cube" ToolTip="Hình lập phương">
+                            <TextBlock Text="🧊" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cylinder" ToolTip="Hình trụ">
+                            <TextBlock Text="🛢" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cone" ToolTip="Hình nón">
+                            <TextBlock Text="🍦" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Sphere" ToolTip="Hình cầu">
+                            <TextBlock Text="⚽" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="TriangularPyramid" ToolTip="Hình chóp tam giác">
+                            <TextBlock Text="⛺" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="QuadrangularPyramid" ToolTip="Hình chóp tứ giác">
+                            <TextBlock Text="🛕" FontSize="20"/>
+                        </Button>
+                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Frustum" ToolTip="Hình nón cụt">
+                            <TextBlock Text="🍮" FontSize="20"/>
+                        </Button>
+                    </WrapPanel>
+                </Grid>
             </Border>
         </Popup>
 
@@ -840,7 +928,69 @@
                         </Viewbox>
                     </Button>
                 </StackPanel>
+
+                <!-- === SETTINGS / MENU === -->
+                <Button x:Name="BtnSettings"
+                        Style="{StaticResource ToolButtonStyle}"
+                        Width="44" Height="44"
+                        Margin="4,0,0,0"
+                        Click="BtnSettings_Click"
+                        ToolTip="Cài đặt">
+                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
             </WrapPanel>
         </Border>
+
+        <!-- Settings Popup -->
+        <Popup x:Name="SettingsPopup"
+               PlacementTarget="{Binding ElementName=BtnSettings}"
+               Placement="Top"
+               VerticalOffset="-10"
+               AllowsTransparency="True"
+               StaysOpen="False"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#E1E8ED"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8"
+                    Margin="8">
+                <Border.Effect>
+                    <DropShadowEffect Color="#CCCCCC" BlurRadius="15" Opacity="0.4" ShadowDepth="4"/>
+                </Border.Effect>
+                <StackPanel MinWidth="180">
+                    <!-- Lưu dự án: nếu đã mở file thì lưu thẳng, nếu mới thì hiện dialog -->
+                    <Button Click="BtnSave_Click" Style="{StaticResource ContextMenuItemStyle}"
+                            ToolTip="Lưu dự án (Ctrl+S)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+                            <TextBlock Text="Lưu dự án"/>
+                        </StackPanel>
+                    </Button>
+                    <!-- Lưu thành tên khác: luôn hiện dialog -->
+                    <Button Click="BtnSaveAs_Click" Style="{StaticResource ContextMenuItemStyle}"
+                            ToolTip="Lưu thành tên và vị trí khác">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEA35;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+                            <TextBlock Text="Lưu thành..."/>
+                        </StackPanel>
+                    </Button>
+                    <Button Click="BtnLoad_Click" Style="{StaticResource ContextMenuItemStyle}"
+                            ToolTip="Mở dự án (Ctrl+O)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+                            <TextBlock Text="Mở dự án"/>
+                        </StackPanel>
+                    </Button>
+                    <Separator Margin="0,4"/>
+                    <Button Click="BtnExportPdf_Click" Style="{StaticResource ContextMenuItemStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8D5;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+                            <TextBlock Text="Xuất PDF"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

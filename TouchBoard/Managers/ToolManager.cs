@@ -1,10 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
+using System.Windows.Input;
 
 namespace TouchBoard.Managers
 {
-    public enum ToolMode { Pen, Select, EraserStroke, EraserPoint }
+    public enum ToolMode { Pen, Select, EraserStroke, EraserPoint, Shape }
 
     public class ToolManager
     {
@@ -74,6 +75,16 @@ namespace TouchBoard.Managers
                     _window.PanelStrokeWidth.Visibility = Visibility.Visible;
                     _window.BtnDeleteSelected.IsEnabled = false;
                     _window.BtnDeleteSelected.Opacity = 0.4;
+                    break;
+
+                case ToolMode.Shape:
+                    _window.DrawingCanvas.EditingMode = InkCanvasEditingMode.None;
+                    // Giữ nguyên hiển thị màu sắc và nét để user thấy màu sẽ được áp dụng
+                    _window.PanelColors.Visibility = Visibility.Visible;
+                    _window.PanelStrokeWidth.Visibility = Visibility.Visible;
+                    _window.BtnDeleteSelected.IsEnabled = false;
+                    _window.BtnDeleteSelected.Opacity = 0.4;
+                    _window.Cursor = Cursors.Cross; // Đổi con trỏ chuột thành dấu thập
                     break;
             }
         }

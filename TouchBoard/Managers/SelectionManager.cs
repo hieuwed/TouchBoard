@@ -163,5 +163,28 @@ namespace TouchBoard.Managers
             _window.SelectionMenuButton.Visibility = Visibility.Collapsed;
             _window.SelectionPopup.IsOpen = false;
         }
+
+        public void RotateSelectedStrokes(double angleInDegrees)
+        {
+            var selectedStrokes = _window.DrawingCanvas.GetSelectedStrokes();
+            if (selectedStrokes.Count == 0) return;
+
+            var bounds = selectedStrokes.GetBounds();
+            double centerX = bounds.X + bounds.Width / 2;
+            double centerY = bounds.Y + bounds.Height / 2;
+
+            var matrix = new System.Windows.Media.Matrix();
+            matrix.RotateAt(angleInDegrees, centerX, centerY);
+            
+            var strokesToSelect = new System.Windows.Ink.StrokeCollection();
+            
+            foreach (var stroke in selectedStrokes)
+            {
+                stroke.Transform(matrix, false);
+                strokesToSelect.Add(stroke);
+            }
+            
+            _window.DrawingCanvas.Select(strokesToSelect);
+        }
     }
 }

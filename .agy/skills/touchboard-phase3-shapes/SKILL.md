@@ -51,10 +51,10 @@ Khi chọn hình học, nhấn nút `(⋯)` sẽ mở menu cho phép:
 
 ## 3. Trạng thái thực hiện
 
-- [ ] Cấu trúc `BoardShapeBase`
-- [ ] UI Popup Menu Hình học
-- [ ] Nâng cấp `SelectionManager` hỗ trợ UIElement
-- [ ] Tính năng Resize/Rotate cho Hình học
-- [ ] Bộ dữ liệu hình 2D
-- [ ] Bộ dữ liệu hình 3D
-- [ ] Undo/Redo cho Object
+- [x] Cấu trúc `BoardShapeBase`
+- [x] UI Popup Menu Hình học
+- [x] Nâng cấp `SelectionManager` hỗ trợ UIElement
+- [x] Tính năng Resize/Rotate cho Hình học
+- [x] Bộ dữ liệu hình 2D
+- [x] Bộ dữ liệu hình 3D
+- [x] Undo/Redo cho Object
