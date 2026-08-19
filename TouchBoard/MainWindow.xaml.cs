@@ -35,6 +35,7 @@ namespace TouchBoard
         private bool _isDrawingShape = false;
         private Point _shapeStartPoint;
         private System.Windows.Ink.StrokeCollection? _currentShapeStrokes = null;
+        private Point _rotationCenter;
 
         private TouchBoard.Controls.SnappingPlugIn? _snappingPlugin; // Attach 1 lần cho DrawingCanvas
 
@@ -894,6 +895,72 @@ namespace TouchBoard
         private void SelectionMenuButton_Click(object sender, RoutedEventArgs e)
         {
             _selectionManager.ToggleContextMenu();
+        }
+
+        private void SelectionRotateThumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            // Tắt nút ⋯ đi để tránh nhảy khi đang xoay
+            SelectionMenuButton.Visibility = Visibility.Collapsed;
+            
+            var strokes = DrawingCanvas.GetSelectedStrokes();
+            if (strokes.Count > 0)
+            {
+                var bounds = strokes.GetBounds();
+                _rotationCenter = new Point(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+            }
+        }
+
+        private void SelectionRotateThumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            var strokes = DrawingCanvas.GetSelectedStrokes();
+            if (strokes.Count == 0) return;
+
+            var thumbPos = Mouse.GetPosition(DrawingCanvas);
+            var prevPos = new Point(thumbPos.X - e.HorizontalChange, thumbPos.Y - e.VerticalChange);
+            
+            // Vector from fixed center to previous mouse position
+            double startX = prevPos.X - _rotationCenter.X;
+            double startY = prevPos.Y - _rotationCenter.Y;
+            
+            // Vector from fixed center to current mouse position
+            double currentX = thumbPos.X - _rotationCenter.X;
+            double currentY = thumbPos.Y - _rotationCenter.Y;
+
+            double angle1 = Math.Atan2(startY, startX) * 180 / Math.PI;
+            double angle2 = Math.Atan2(currentY, currentX) * 180 / Math.PI;
+            double deltaAngle = angle2 - angle1;
+            
+            if (deltaAngle > 180) deltaAngle -= 360;
+            if (deltaAngle < -180) deltaAngle += 360;
+
+            // Làm chậm tốc độ xoay (nhân với hệ số 0.3)
+            deltaAngle *= 0.3;
+
+            if (Math.Abs(deltaAngle) > 0.1)
+            {
+                _selectionManager.RotateSelectedStrokes(deltaAngle);
+                
+                // Cập nhật lại vị trí Thumb theo bounding box mới
+                var newBounds = DrawingCanvas.GetSelectedStrokes().GetBounds();
+                var transformedBounds = DrawingCanvas.TransformToVisual(SelectionOverlay).TransformBounds(newBounds);
+                
+                double newLeft = transformedBounds.Right + 8 + 4;
+                double newTop = transformedBounds.Top - 8 + SelectionMenuButton.Height + 8;
+                
+                if (newLeft > SelectionOverlay.ActualWidth)
+                    newLeft = transformedBounds.Left - SelectionMenuButton.Width - 8 + 4;
+                if (newTop < 0)
+                    newTop = transformedBounds.Bottom + 8 + SelectionMenuButton.Height + 8;
+                    
+                Canvas.SetLeft(SelectionRotateThumb, newLeft);
+                Canvas.SetTop(SelectionRotateThumb, newTop);
+            }
+        }
+
+        private void SelectionRotateThumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            SelectionMenuButton.Visibility = Visibility.Visible;
+            _historyManager.SaveState();
         }
 
         private void PopupColor_Click(object sender, RoutedEventArgs e)

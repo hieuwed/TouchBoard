@@ -55,10 +55,12 @@ namespace TouchBoard.Managers
             {
                 UpdateContextMenuPosition();
                 _window.SelectionMenuButton.Visibility = Visibility.Visible;
+                _window.SelectionRotateThumb.Visibility = Visibility.Visible;
             }
             else
             {
                 _window.SelectionMenuButton.Visibility = Visibility.Collapsed;
+                _window.SelectionRotateThumb.Visibility = Visibility.Collapsed;
                 _window.SelectionPopup.IsOpen = false;
             }
         }
@@ -90,6 +92,10 @@ namespace TouchBoard.Managers
 
             Canvas.SetLeft(_window.SelectionMenuButton, left);
             Canvas.SetTop(_window.SelectionMenuButton, top);
+
+            // Đặt nút Rotate ngay dưới nút ContextMenu
+            Canvas.SetLeft(_window.SelectionRotateThumb, left + 4);
+            Canvas.SetTop(_window.SelectionRotateThumb, top + _window.SelectionMenuButton.Height + 8);
         }
 
         /// <summary>

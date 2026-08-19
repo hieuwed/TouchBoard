@@ -65,6 +65,28 @@
                     </ControlTemplate>
                 </Button.Template>
             </Button>
+            
+            <Thumb x:Name="SelectionRotateThumb"
+                   Visibility="Collapsed"
+                   Width="32" Height="32"
+                   Cursor="Hand"
+                   DragStarted="SelectionRotateThumb_DragStarted"
+                   DragDelta="SelectionRotateThumb_DragDelta"
+                   DragCompleted="SelectionRotateThumb_DragCompleted">
+                <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="White"
+                                BorderBrush="#E1E8ED"
+                                BorderThickness="1"
+                                CornerRadius="16">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#CCCCCC" BlurRadius="6" Opacity="0.3" ShadowDepth="2"/>
+                            </Border.Effect>
+                            <TextBlock Text="↻" FontSize="18" Foreground="#8888A8" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Thumb.Template>
+            </Thumb>
         </Canvas>
 
         <!-- Pen Settings Popup -->
@@ -740,25 +762,34 @@
                         <!-- 3D Shapes -->
                         <TextBlock Text="3D Shapes" Width="200" FontSize="12" FontWeight="SemiBold" Foreground="#8888A8" Margin="4,8,0,8"/>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cube" ToolTip="Hình lập phương">
-                            <TextBlock Text="🧊" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0,0.25 L0.75,0.25 L0.75,1 L0,1 Z M0,0.25 L0.25,0 L1,0 L0.75,0.25 M1,0 L1,0.75 L0.75,1"/>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cylinder" ToolTip="Hình trụ">
-                            <TextBlock Text="🛢" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0,0.15 A0.5,0.15 0 0,1 1,0.15 A0.5,0.15 0 0,1 0,0.15 Z M0,0.15 L0,0.85 M1,0.15 L1,0.85 M0,0.85 A0.5,0.15 0 0,0 1,0.85"/>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Cone" ToolTip="Hình nón">
-                            <TextBlock Text="🍦" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0.5,0 L0,0.85 M0.5,0 L1,0.85 M0,0.85 A0.5,0.15 0 0,0 1,0.85"/>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Sphere" ToolTip="Hình cầu">
-                            <TextBlock Text="⚽" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0.5,0 A0.5,0.5 0 0,1 0.5,1 A0.5,0.5 0 0,1 0.5,0 Z M0,0.5 A0.5,0.15 0 0,0 1,0.5 M0.5,0 A0.15,0.5 0 0,0 0.5,1"/>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="TriangularPyramid" ToolTip="Hình chóp tam giác">
-                            <TextBlock Text="⛺" FontSize="20"/>
-                        </Button>
-                        <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="QuadrangularPyramid" ToolTip="Hình chóp tứ giác">
-                            <TextBlock Text="🛕" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0.5,0 L0,0.8 M0.5,0 L1,0.8 M0.5,0 L0.5,1 M0,0.8 L0.5,1 M1,0.8 L0.5,1"/>
+                            </Viewbox>
                         </Button>
                         <Button Style="{StaticResource ToolButtonStyle}" Width="40" Height="40" Margin="2" Click="InsertShape_Click" Tag="Frustum" ToolTip="Hình nón cụt">
-                            <TextBlock Text="🍮" FontSize="20"/>
+                            <Viewbox Width="24" Height="24">
+                                <Path Stroke="#C6D0F5" StrokeThickness="0.05" StrokeLineJoin="Round" Data="M0.2,0.15 A0.3,0.08 0 0,1 0.8,0.15 A0.3,0.08 0 0,1 0.2,0.15 Z M0.2,0.15 L0,0.85 M0.8,0.15 L1,0.85 M0,0.85 A0.5,0.15 0 0,0 1,0.85"/>
+                            </Viewbox>
                         </Button>
                     </WrapPanel>
                 </Grid>
